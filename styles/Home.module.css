@@ -1,0 +1,42 @@
+.page { min-height: 100vh; background: var(--navy); }
+.navbar { position: sticky; top: 0; z-index: 100; background: rgba(10,14,26,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border-sub); }
+.navInner { max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 68px; }
+.logo { display: flex; align-items: center; gap: 10px; }
+.logoIcon { width: 34px; height: 34px; background: var(--gold-dim); border: 1px solid var(--gold-border); border-radius: 9px; display: flex; align-items: center; justify-content: center; color: var(--gold); }
+.logoText { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--white); }
+.logoText span { color: var(--gold); }
+.navLinks { display: flex; align-items: center; gap: 32px; }
+.navLinks a { font-size: 14px; color: var(--text-dim); font-weight: 500; transition: color 0.2s; }
+.navLinks a:hover { color: var(--white); }
+.navCta { display: flex; align-items: center; gap: 10px; }
+.btnGhost { background: transparent; border: 1px solid var(--border-sub); color: var(--text-dim); padding: 8px 18px; font-size: 14px; border-radius: var(--radius-sm); transition: all 0.2s; }
+.btnGhost:hover { border-color: rgba(255,255,255,0.2); color: var(--white); }
+.btnPrimary { background: var(--gold); border: none; color: #0A0E1A; padding: 9px 22px; font-size: 14px; font-weight: 700; border-radius: var(--radius-sm); transition: all 0.2s; }
+.btnPrimary:hover { background: var(--gold-light); }
+.btnGhostLg { background: transparent; border: 1px solid var(--border-sub); color: var(--text-dim); padding: 13px 24px; font-size: 15px; border-radius: var(--radius-sm); transition: all 0.2s; }
+.btnGhostLg:hover { border-color: rgba(255,255,255,0.2); color: var(--white); }
+.btnPrimaryLg { background: var(--gold); border: none; color: #0A0E1A; padding: 13px 28px; font-size: 15px; font-weight: 700; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 9px; transition: all 0.2s; }
+.btnPrimaryLg:hover { background: var(--gold-light); }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; background: var(--gold-dim); border: 1px solid var(--gold-border); color: var(--gold-light); margin-bottom: 20px; }
+.hero { min-height: 88vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 80px 24px; position: relative; overflow: hidden; }
+.hero::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 700px; height: 500px; background: radial-gradient(ellipse, rgba(201,168,76,0.07) 0%, transparent 65%); pointer-events: none; }
+.heroContent { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; }
+.heroContent h1 { font-family: var(--font-display); font-size: clamp(36px,6vw,58px); font-weight: 700; line-height: 1.15; margin: 18px 0 20px; color: var(--white); }
+.heroContent h1 span { color: var(--gold); }
+.heroContent p { font-size: 16px; color: var(--text-dim); max-width: 480px; margin: 0 auto 36px; }
+.heroBtns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.waveform { display: flex; align-items: center; justify-content: center; gap: 4px; height: 50px; margin-top: 48px; }
+.waveform span { display: block; width: 3px; height: var(--h, 10px); border-radius: 3px; background: var(--gold); opacity: 0.5; animation: wave 1.4s ease-in-out infinite; animation-delay: var(--delay, 0s); }
+@keyframes wave { 0%,100%{transform:scaleY(1);opacity:.4} 50%{transform:scaleY(1.5);opacity:.9} }
+.howSection { border-top: 1px solid var(--border-sub); }
+.sectionWrap { max-width: 1100px; margin: 0 auto; padding: 72px 24px; }
+.eyebrow { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 10px; }
+.sectionHeading { font-family: var(--font-display); font-size: clamp(24px,4vw,36px); font-weight: 700; color: var(--white); margin-bottom: 40px; }
+.stepsGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 16px; }
+.stepCard { background: var(--navy-2); border: 1px solid var(--border-sub); border-radius: var(--radius-md); padding: 24px 16px; text-align: center; }
+.stepIcon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+.stepCard h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.stepCard p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.footer { border-top: 1px solid var(--border-sub); }
+.footerInner { max-width: 1100px; margin: 0 auto; padding: 32px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.footerText { font-size: 12px; color: var(--text-muted); }
