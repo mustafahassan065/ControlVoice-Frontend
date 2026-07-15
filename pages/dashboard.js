@@ -16,22 +16,20 @@ export default function Dashboard() {
 
   useEffect(() => {
   const token = localStorage.getItem('token');
-  const userData = localStorage.getItem('user');
   if (!token) { router.push('/login'); return; }
-  const u = JSON.parse(userData);
-  setUser(u);
 
-  if (router.query.payment === 'success') {
-    // Fresh user data lo backend se
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    .then(r => r.json())
-    .then(freshUser => {
-      localStorage.setItem('user', JSON.stringify(freshUser));
-      setUser(freshUser);
-    });
-  }
+  // Har baar fresh user data lo backend se
+  fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+  .then(r => r.json())
+  .then(freshUser => {
+    localStorage.setItem('user', JSON.stringify(freshUser));
+    setUser(freshUser);
+  });
+
+  const userData = localStorage.getItem('user');
+  const u = JSON.parse(userData);
 
   Promise.all([
     fetchProgress(token, u.id),
@@ -157,6 +155,27 @@ export default function Dashboard() {
 
         {/* STAT CARDS */}
         <div className={styles.statsGrid}>
+        <div className={styles.statCard}>
+  <p className={styles.statLabel}>Plan</p>
+  <p className={styles.statValue} style={{
+    color: user?.plan === 'executive' ? 'var(--purple)' :
+           user?.plan === 'pro' ? 'var(--gold)' : 'var(--text-muted)',
+    textTransform: 'capitalize',
+    fontSize: '20px'
+  }}>
+    {user?.plan === 'executive' ? '⭐ Executive' :
+     user?.plan === 'pro' ? '✨ Pro' : 'Free'}
+  </p>
+  {user?.plan === 'free' && (
+    <p
+      className={styles.statChange}
+      style={{ color: 'var(--gold)', cursor: 'pointer' }}
+      onClick={() => router.push('/pricing')}
+    >
+      Upgrade →
+    </p>
+  )}
+</div>
           <div className={styles.statCard}>
             <p className={styles.statLabel}>Authority Score</p>
             <p className={styles.statValue} style={{ color: 'var(--gold)' }}>
