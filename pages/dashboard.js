@@ -21,13 +21,16 @@ export default function Dashboard() {
   const u = JSON.parse(userData);
   setUser(u);
 
-  // Payment success check karo
   if (router.query.payment === 'success') {
-    const plan = router.query.plan;
-    // localStorage update karo
-    const updatedUser = { ...u, plan };
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-    setUser(updatedUser);
+    // Fresh user data lo backend se
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(r => r.json())
+    .then(freshUser => {
+      localStorage.setItem('user', JSON.stringify(freshUser));
+      setUser(freshUser);
+    });
   }
 
   Promise.all([
@@ -35,7 +38,6 @@ export default function Dashboard() {
     fetchRecordings(token),
   ]).finally(() => setLoading(false));
 }, [router.query]);
-
   async function fetchProgress(token, userId) {
     try {
       const res = await fetch(

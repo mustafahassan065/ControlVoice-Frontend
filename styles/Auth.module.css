@@ -23,3 +23,25 @@
 .switchText { font-size: 14px; color: var(--text-muted); text-align: center; margin-top: 20px; }
 .switchText span { color: var(--gold); cursor: pointer; }
 .switchText span:hover { color: var(--gold-light); }
+.passwordWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.passwordWrap input {
+  width: 100%;
+  padding-right: 42px;
+}
+.eyeBtn {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+.eyeBtn:hover { color: var(--white); }
