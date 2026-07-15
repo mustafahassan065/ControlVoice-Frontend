@@ -189,11 +189,48 @@ export default function Exercises() {
                   {/* EXPANDED CONTENT */}
                   {isActive && (
                     <div className={styles.cardBody}>
+
+                      {/* INSTRUCTION */}
                       <div className={styles.instructionBox}>
                         <p className={styles.instructionLabel}>How to practice</p>
                         <p className={styles.instructionText}>{ex.instruction}</p>
                       </div>
 
+                      {/* WRONG / CORRECT AUDIO */}
+                      {(ex.wrong_audio_url || ex.correct_audio_url) && (
+                        <div className={styles.audioExamples}>
+                          {ex.wrong_audio_url && (
+                            <div className={styles.audioExample}>
+                              <div className={styles.audioExampleHeader}>
+                                <span className={styles.wrongDot}></span>
+                                <p className={styles.audioExampleLabel}>Wrong Example</p>
+                              </div>
+                              <audio
+                                controls
+                                src={ex.wrong_audio_url}
+                                className={styles.audioExamplePlayer}
+                                preload="none"
+                              />
+                            </div>
+                          )}
+                          {ex.correct_audio_url && (
+                            <div className={styles.audioExample}>
+                              <div className={styles.audioExampleHeader}>
+                                <span className={styles.correctDot}></span>
+                                <p className={styles.audioExampleLabel}>Correct Example</p>
+                              </div>
+                              <audio
+                                controls
+                                src={ex.correct_audio_url}
+                                className={styles.audioExamplePlayer}
+                                preload="none"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* PRACTICE TEMPLATE */}
                       <div className={styles.templateBox}>
                         <p className={styles.templateLabel}>Practice Template</p>
                         <p className={styles.templateText}>"{ex.practice_template}"</p>
