@@ -2,9 +2,34 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, Legend
+  Tooltip, ResponsiveContainer
 } from 'recharts';
 import styles from '../styles/Dashboard.module.css';
+
+const CATEGORY_LABELS = {
+  pause_control:  { label: 'Pause Control',  color: 'var(--teal)',   icon: '⏸️' },
+  strong_endings: { label: 'Strong Endings', color: 'var(--gold)',   icon: '⬇️' },
+  pitch_movement: { label: 'Pitch Movement', color: 'var(--purple)', icon: '🎵' },
+  pace_control:   { label: 'Pace Control',   color: 'var(--green)',  icon: '🎯' },
+};
+
+const PROGRAM_RECOMMENDATIONS = {
+  pause_control:  { program: 'Authority Foundation', reason: 'builds core pause and presence habits' },
+  strong_endings: { program: 'Authority Foundation', reason: 'trains commanding sentence endings' },
+  pitch_movement: { program: 'Public Speaking',      reason: 'develops vocal variety and expressiveness' },
+  pace_control:   { program: 'Interview Confidence', reason: 'trains calm, measured delivery under pressure' },
+};
+
+function getWeakestCategory(progress) {
+  if (!progress?.latest_authority) return null;
+  const scores = {
+    pause_control:  progress.latest_pause   || 50,
+    strong_endings: progress.latest_ending  || 50,
+    pitch_movement: progress.latest_pitch   || 50,
+    pace_control:   progress.latest_pace    || 50,
+  };
+  return Object.entries(scores).sort((a, b) => a[1] - b[1])[0][0];
+}
 
 export default function Dashboard() {
   const router = useRouter();
@@ -14,28 +39,39 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [activeChart, setActiveChart] = useState('authority');
 
+  // Coaching panel states
+  const [coachExpanded, setCoachExpanded] = useState(true);
+  const [recommendedExercise, setRecommendedExercise] = useState(null);
+  const [loadingExercise, setLoadingExercise] = useState(false);
+  const [exerciseSentences, setExerciseSentences] = useState([]);
+  const [loadingSentences, setLoadingSentences] = useState(false);
+  const [showExercise, setShowExercise] = useState(false);
+  const [assigningProgram, setAssigningProgram] = useState(false);
+  const [programAssigned, setProgramAssigned] = useState(false);
+  const [weakestCategory, setWeakestCategory] = useState(null);
+
   useEffect(() => {
-  const token = localStorage.getItem('token');
-  if (!token) { router.push('/login'); return; }
+    const token = localStorage.getItem('token');
+    if (!token) { router.push('/login'); return; }
 
-  // Har baar fresh user data lo backend se
-  fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-  .then(r => r.json())
-  .then(freshUser => {
-    localStorage.setItem('user', JSON.stringify(freshUser));
-    setUser(freshUser);
-  });
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(r => r.json())
+    .then(freshUser => {
+      localStorage.setItem('user', JSON.stringify(freshUser));
+      setUser(freshUser);
+    });
 
-  const userData = localStorage.getItem('user');
-  const u = JSON.parse(userData);
+    const userData = localStorage.getItem('user');
+    const u = JSON.parse(userData);
 
-  Promise.all([
-    fetchProgress(token, u.id),
-    fetchRecordings(token),
-  ]).finally(() => setLoading(false));
-}, [router.query]);
+    Promise.all([
+      fetchProgress(token, u.id),
+      fetchRecordings(token),
+    ]).finally(() => setLoading(false));
+  }, [router.query]);
+
   async function fetchProgress(token, userId) {
     try {
       const res = await fetch(
@@ -43,7 +79,15 @@ export default function Dashboard() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await res.json();
-      if (res.ok) setProgress(data);
+      if (res.ok) {
+        setProgress(data);
+        // Weakest category identify karo
+        const weakCat = getWeakestCategory(data);
+        if (weakCat) {
+          setWeakestCategory(weakCat);
+          fetchRecommendedExercise(weakCat, token);
+        }
+      }
     } catch (err) { console.error(err); }
   }
 
@@ -58,6 +102,60 @@ export default function Dashboard() {
     } catch (err) { console.error(err); }
   }
 
+  async function fetchRecommendedExercise(category, token) {
+    setLoadingExercise(true);
+    try {
+      const t = token || localStorage.getItem('token');
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/exercises/all?category=${category}`,
+        { headers: { Authorization: `Bearer ${t}` } }
+      );
+      const data = await res.json();
+      if (res.ok && data.length > 0) {
+        setRecommendedExercise(data[0]);
+      }
+    } catch (err) { console.error(err); }
+    finally { setLoadingExercise(false); }
+  }
+
+  async function loadExerciseSentences(exerciseId) {
+    setLoadingSentences(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/exercises/practice-sentences/${exerciseId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = await res.json();
+      if (res.ok) setExerciseSentences(data.sentences);
+    } catch (err) { console.error(err); }
+    finally { setLoadingSentences(false); }
+  }
+
+  async function assignRecommendedProgram() {
+    const token = localStorage.getItem('token');
+    const progName = PROGRAM_RECOMMENDATIONS[weakestCategory]?.program;
+    if (!progName) return;
+    setAssigningProgram(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/programs/all`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const programs = await res.json();
+      const match = programs.find(p => p.title === progName);
+      if (!match) return;
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/programs/assign/${match.id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProgramAssigned(true);
+      // Refresh progress
+      const u = JSON.parse(localStorage.getItem('user'));
+      fetchProgress(token, u.id);
+    } catch (err) { console.error(err); }
+    finally { setAssigningProgram(false); }
+  }
+
   async function markDayComplete(userProgramId) {
     try {
       const token = localStorage.getItem('token');
@@ -65,7 +163,8 @@ export default function Dashboard() {
         `${process.env.NEXT_PUBLIC_API_URL}/programs/progress/${userProgramId}`,
         { method: 'POST', headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchProgress(token, user.id);
+      const u = JSON.parse(localStorage.getItem('user'));
+      fetchProgress(token, u.id);
     } catch (err) { console.error(err); }
   }
 
@@ -76,10 +175,10 @@ export default function Dashboard() {
   }
 
   const CHART_LINES = {
-    authority:   { key: 'authority_score',   color: '#C9A84C', label: 'Authority' },
-    confidence:  { key: 'confidence_score',  color: '#2DD4BF', label: 'Confidence' },
-    presence:    { key: 'presence_score',    color: '#A78BFA', label: 'Presence' },
-    leadership:  { key: 'leadership_score',  color: '#4ADE80', label: 'Leadership' },
+    authority:  { key: 'authority_score',  color: '#C9A84C', label: 'Authority' },
+    confidence: { key: 'confidence_score', color: '#2DD4BF', label: 'Confidence' },
+    presence:   { key: 'presence_score',   color: '#A78BFA', label: 'Presence' },
+    leadership: { key: 'leadership_score', color: '#4ADE80', label: 'Leadership' },
   };
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -97,6 +196,10 @@ export default function Dashboard() {
     }
     return null;
   };
+
+  const catMeta = weakestCategory ? CATEGORY_LABELS[weakestCategory] : null;
+  const progRec = weakestCategory ? PROGRAM_RECOMMENDATIONS[weakestCategory] : null;
+  const hasRecordings = recordings.length > 0;
 
   if (loading) {
     return (
@@ -155,27 +258,23 @@ export default function Dashboard() {
 
         {/* STAT CARDS */}
         <div className={styles.statsGrid}>
-        <div className={styles.statCard}>
-  <p className={styles.statLabel}>Plan</p>
-  <p className={styles.statValue} style={{
-    color: user?.plan === 'executive' ? 'var(--purple)' :
-           user?.plan === 'pro' ? 'var(--gold)' : 'var(--text-muted)',
-    textTransform: 'capitalize',
-    fontSize: '20px'
-  }}>
-    {user?.plan === 'executive' ? '⭐ Executive' :
-     user?.plan === 'pro' ? '✨ Pro' : 'Free'}
-  </p>
-  {user?.plan === 'free' && (
-    <p
-      className={styles.statChange}
-      style={{ color: 'var(--gold)', cursor: 'pointer' }}
-      onClick={() => router.push('/pricing')}
-    >
-      Upgrade →
-    </p>
-  )}
-</div>
+          <div className={styles.statCard}>
+            <p className={styles.statLabel}>Plan</p>
+            <p className={styles.statValue} style={{
+              color: user?.plan === 'executive' ? 'var(--purple)' :
+                     user?.plan === 'pro' ? 'var(--gold)' : 'var(--text-muted)',
+              textTransform: 'capitalize',
+              fontSize: '20px'
+            }}>
+              {user?.plan === 'executive' ? '⭐ Executive' :
+               user?.plan === 'pro' ? '✨ Pro' : 'Free'}
+            </p>
+            {user?.plan === 'free' && (
+              <p className={styles.statChange} style={{ color: 'var(--gold)', cursor: 'pointer' }} onClick={() => router.push('/pricing')}>
+                Upgrade →
+              </p>
+            )}
+          </div>
           <div className={styles.statCard}>
             <p className={styles.statLabel}>Authority Score</p>
             <p className={styles.statValue} style={{ color: 'var(--gold)' }}>
@@ -209,18 +308,204 @@ export default function Dashboard() {
             <p className={styles.statChange}>days in a row</p>
           </div>
           <div className={styles.statCard}>
-            <p className={styles.statLabel}>Best Score</p>
-            <p className={styles.statValue} style={{ color: 'var(--gold)' }}>
-              {progress?.best_authority || '—'}
-            </p>
-            <p className={styles.statChange}>all time</p>
-          </div>
-          <div className={styles.statCard}>
             <p className={styles.statLabel}>Recordings</p>
             <p className={styles.statValue}>{progress?.total_recordings || 0}</p>
             <p className={styles.statChange}>submitted</p>
           </div>
         </div>
+
+        {/* ═══════════════════════════════════════════
+            SMART COACHING PANEL
+        ═══════════════════════════════════════════ */}
+        {hasRecordings && catMeta && (
+          <div className={styles.coachPanel}>
+            {/* Header — always visible */}
+            <div className={styles.coachPanelHeader} onClick={() => setCoachExpanded(!coachExpanded)}>
+              <div className={styles.coachPanelLeft}>
+                <span className={styles.coachPanelIcon}>🎓</span>
+                <div>
+                  <p className={styles.coachPanelTitle}>Your Coach Recommends</p>
+                  <p className={styles.coachPanelSub}>
+                    Focus on <strong style={{ color: catMeta.color }}>{catMeta.icon} {catMeta.label}</strong> — your weakest area right now
+                  </p>
+                </div>
+              </div>
+              <div className={styles.coachPanelToggle} style={{ transform: coachExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
+            </div>
+
+            {/* Expandable body */}
+            {coachExpanded && (
+              <div className={styles.coachPanelBody}>
+
+                {/* Score bars — weakness highlight */}
+                <div className={styles.coachScoreBars}>
+                  {[
+                    { label: 'Strong Endings', score: progress?.latest_ending  || 0, key: 'strong_endings', color: 'var(--gold)' },
+                    { label: 'Pause Control',  score: progress?.latest_pause   || 0, key: 'pause_control',  color: 'var(--teal)' },
+                    { label: 'Pace Control',   score: progress?.latest_pace    || 0, key: 'pace_control',   color: 'var(--green)' },
+                    { label: 'Pitch Variety',  score: progress?.latest_pitch   || 0, key: 'pitch_movement', color: 'var(--purple)' },
+                  ].map((item, i) => (
+                    <div key={i} className={`${styles.coachBarRow} ${item.key === weakestCategory ? styles.coachBarRowWeak : ''}`}>
+                      <span className={styles.coachBarLabel}>
+                        {item.key === weakestCategory && <span className={styles.weakTag}>Weakest</span>}
+                        {item.label}
+                      </span>
+                      <div className={styles.coachBarTrack}>
+                        <div className={styles.coachBarFill} style={{ width: `${item.score}%`, background: item.color }} />
+                      </div>
+                      <span className={styles.coachBarScore} style={{ color: item.color }}>{item.score}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Recommended Exercise */}
+                <div className={styles.coachSection}>
+                  <p className={styles.coachSectionLabel}>
+                    <span>📌</span> Recommended Exercise
+                  </p>
+                  {loadingExercise ? (
+                    <div className={styles.coachLoading}>
+                      <div className={styles.spinnerSmall}></div>
+                      <span>Loading exercise...</span>
+                    </div>
+                  ) : recommendedExercise ? (
+                    <div className={styles.coachExerciseCard}>
+                      <div className={styles.coachExerciseTop}>
+                        <div>
+                          <p className={styles.coachExerciseName}>{recommendedExercise.title}</p>
+                          <p className={styles.coachExerciseDesc}>{recommendedExercise.instruction}</p>
+                        </div>
+                        <button
+                          className={styles.coachExpandBtn}
+                          onClick={() => {
+                            setShowExercise(!showExercise);
+                            if (!showExercise && exerciseSentences.length === 0) {
+                              loadExerciseSentences(recommendedExercise.id);
+                            }
+                          }}
+                        >
+                          {showExercise ? 'Hide' : 'Practice Now'}
+                        </button>
+                      </div>
+
+                      {showExercise && (
+                        <div className={styles.coachExerciseExpanded}>
+                          {/* Wrong / Correct audio */}
+                          {(recommendedExercise.wrong_audio_url || recommendedExercise.correct_audio_url) && (
+                            <div className={styles.audioExamples}>
+                              {recommendedExercise.wrong_audio_url && (
+                                <div className={styles.audioExample}>
+                                  <div className={styles.audioExampleHeader}>
+                                    <span className={styles.wrongDot}></span>
+                                    <p className={styles.audioExampleLabel}>Wrong Example</p>
+                                  </div>
+                                  <audio controls src={recommendedExercise.wrong_audio_url} className={styles.audioExamplePlayer} preload="none" />
+                                </div>
+                              )}
+                              {recommendedExercise.correct_audio_url && (
+                                <div className={styles.audioExample}>
+                                  <div className={styles.audioExampleHeader}>
+                                    <span className={styles.correctDot}></span>
+                                    <p className={styles.audioExampleLabel}>Correct Example</p>
+                                  </div>
+                                  <audio controls src={recommendedExercise.correct_audio_url} className={styles.audioExamplePlayer} preload="none" />
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Practice template */}
+                          <div className={styles.templateBox}>
+                            <p className={styles.templateLabel}>Practice Template</p>
+                            <p className={styles.templateText}>"{recommendedExercise.practice_template}"</p>
+                          </div>
+
+                          {/* AI Sentences */}
+                          <div className={styles.sentencesBox}>
+                            <p className={styles.sentencesLabel}>
+                              AI Practice Sentences
+                              <span className={styles.aiTag}>GPT-4</span>
+                            </p>
+                            {loadingSentences ? (
+                              <div className={styles.coachLoading}>
+                                <div className={styles.spinnerSmall}></div>
+                                <span>Generating sentences...</span>
+                              </div>
+                            ) : (
+                              <div className={styles.sentencesList}>
+                                {exerciseSentences.map((s, i) => (
+                                  <div key={i} className={styles.sentenceItem}>
+                                    <span className={styles.sentenceNum}>{i + 1}</span>
+                                    <p className={styles.sentenceText}>"{s}"</p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className={styles.practiceNote}>
+                            <span>🎯</span>
+                            <p>Repeat each sentence 5 times. Record yourself and compare.</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* All Exercises link */}
+                <button
+                  className={styles.coachLinkBtn}
+                  onClick={() => {
+                    const latestReport = recordings.find(r => r.report)?.report;
+                    router.push(latestReport ? `/exercises?report_id=${latestReport.id}` : '/exercises');
+                  }}
+                >
+                  View All Recommended Exercises →
+                </button>
+
+                {/* Recommended Program */}
+                {progRec && (
+                  <div className={styles.coachSection}>
+                    <p className={styles.coachSectionLabel}>
+                      <span>🏆</span> Recommended Program
+                    </p>
+                    <div className={styles.coachProgramCard}>
+                      <div>
+                        <p className={styles.coachProgramName}>{progRec.program}</p>
+                        <p className={styles.coachProgramDesc}>30 days · {progRec.reason}</p>
+                      </div>
+                      {!programAssigned && !progress?.active_program ? (
+                        <button
+                          className={styles.coachStartBtn}
+                          onClick={assignRecommendedProgram}
+                          disabled={assigningProgram}
+                        >
+                          {assigningProgram ? 'Starting...' : 'Start Program'}
+                        </button>
+                      ) : programAssigned ? (
+                        <span className={styles.coachProgramDone}>✅ Started</span>
+                      ) : (
+                        <span className={styles.coachProgramDone}>✅ Active</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Next recording reminder */}
+                <div className={styles.coachNextStep}>
+                  <span>📅</span>
+                  <p>Record again in 7 days to track your improvement. Your next recommended recording date is shown on your progress chart.</p>
+                </div>
+
+              </div>
+            )}
+          </div>
+        )}
 
         {/* TARGET PROGRESS */}
         {progress?.latest_authority > 0 && (
@@ -242,10 +527,7 @@ export default function Dashboard() {
               </div>
               <p className={styles.targetPercentLabel}>to target</p>
               <div className={styles.targetTrack}>
-                <div
-                  className={styles.targetFill}
-                  style={{ width: `${progress.progress_to_target}%` }}
-                />
+                <div className={styles.targetFill} style={{ width: `${progress.progress_to_target}%` }} />
               </div>
             </div>
           </div>
@@ -301,10 +583,10 @@ export default function Dashboard() {
             <h2 className={styles.sectionTitle}>Score Breakdown</h2>
             <div className={styles.scoresGrid}>
               {[
-                { label: 'Authority',   score: progress.latest_authority,  color: 'var(--gold)' },
-                { label: 'Confidence',  score: progress.latest_confidence, color: 'var(--teal)' },
-                { label: 'Presence',    score: progress.latest_presence,   color: 'var(--purple)' },
-                { label: 'Leadership',  score: progress.latest_leadership, color: 'var(--green)' },
+                { label: 'Authority',  score: progress.latest_authority,  color: 'var(--gold)' },
+                { label: 'Confidence', score: progress.latest_confidence, color: 'var(--teal)' },
+                { label: 'Presence',   score: progress.latest_presence,   color: 'var(--purple)' },
+                { label: 'Leadership', score: progress.latest_leadership, color: 'var(--green)' },
               ].map((item, i) => (
                 <div key={i} className={styles.scoreItem}>
                   <div className={styles.scoreItemHeader}>
@@ -330,17 +612,11 @@ export default function Dashboard() {
                 Day <strong style={{ color: 'var(--gold)' }}>{progress.active_program.current_day}</strong> of {progress.active_program.duration_days}
               </p>
               <div className={styles.programTrack}>
-                <div
-                  className={styles.programFill}
-                  style={{ width: `${progress.active_program.progress_percent}%` }}
-                />
+                <div className={styles.programFill} style={{ width: `${progress.active_program.progress_percent}%` }} />
               </div>
             </div>
             <div className={styles.programRight}>
-              <button
-                className={styles.btnPrimary}
-                onClick={() => markDayComplete(progress.active_program.user_program_id)}
-              >
+              <button className={styles.btnPrimary} onClick={() => markDayComplete(progress.active_program.user_program_id)}>
                 ✓ Complete Day {progress.active_program.current_day}
               </button>
               <button className={styles.btnGhost} onClick={() => router.push('/exercises')}>
@@ -390,7 +666,7 @@ export default function Dashboard() {
                     )}
                   </div>
                   <div className={styles.recordingRight}>
-                    <audio controls src={`${process.env.NEXT_PUBLIC_API_URL}${rec.audio_url}`} className={styles.audioPlayer} />
+                    <audio controls src={rec.audio_url} className={styles.audioPlayer} />
                     {rec.report && (
                       <button
                         className={styles.btnGhost}

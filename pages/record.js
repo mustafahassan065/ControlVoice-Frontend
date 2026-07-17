@@ -2,6 +2,42 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import styles from '../styles/Record.module.css';
 
+// Weakness to category mapping
+const WEAKNESS_CATEGORY_MAP = {
+  'pause': 'pause_control',
+  'ending': 'strong_endings',
+  'pitch': 'pitch_movement',
+  'pace': 'pace_control',
+  'filler': 'pace_control',
+  'fast': 'pace_control',
+  'slow': 'pace_control',
+  'monotone': 'pitch_movement',
+};
+
+const PROGRAM_RECOMMENDATIONS = {
+  'pause_control':  { program: 'Authority Foundation',   reason: 'builds core pause and presence habits' },
+  'strong_endings': { program: 'Authority Foundation',   reason: 'trains commanding sentence endings' },
+  'pitch_movement': { program: 'Public Speaking',        reason: 'develops vocal variety and expressiveness' },
+  'pace_control':   { program: 'Interview Confidence',   reason: 'trains calm, measured delivery under pressure' },
+};
+
+const CATEGORY_LABELS = {
+  pause_control:  { label: 'Pause Control',  color: 'var(--teal)',   icon: '⏸️' },
+  strong_endings: { label: 'Strong Endings', color: 'var(--gold)',   icon: '⬇️' },
+  pitch_movement: { label: 'Pitch Movement', color: 'var(--purple)', icon: '🎵' },
+  pace_control:   { label: 'Pace Control',   color: 'var(--green)',  icon: '🎯' },
+};
+
+function getWeakestCategory(reportData, analysisData) {
+  const scores = {
+    pause_control:  reportData?.pause_score  || 50,
+    strong_endings: reportData?.ending_score || 50,
+    pitch_movement: reportData?.pitch_score  || 50,
+    pace_control:   reportData?.pace_score   || 50,
+  };
+  return Object.entries(scores).sort((a, b) => a[1] - b[1])[0][0];
+}
+
 export default function Record() {
   const router = useRouter();
   const [phase, setPhase] = useState('idle');
@@ -17,6 +53,16 @@ export default function Record() {
   const [reportData, setReportData] = useState(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [error, setError] = useState('');
+
+  // Guided coaching flow states
+  const [coachStep, setCoachStep] = useState(0); // 0=hidden, 1=alert, 2=exercise, 3=program
+  const [recommendedExercise, setRecommendedExercise] = useState(null);
+  const [loadingExercise, setLoadingExercise] = useState(false);
+  const [exerciseSentences, setExerciseSentences] = useState([]);
+  const [loadingSentences, setLoadingSentences] = useState(false);
+  const [assigningProgram, setAssigningProgram] = useState(false);
+  const [programAssigned, setProgramAssigned] = useState(false);
+  const [weakestCategory, setWeakestCategory] = useState(null);
 
   const mediaRef = useRef(null);
   const chunksRef = useRef([]);
@@ -34,6 +80,80 @@ export default function Record() {
       clearInterval(pollRef.current);
     };
   }, []);
+
+  // When reportData arrives — start coaching flow
+  useEffect(() => {
+    if (reportData && phase === 'done') {
+      const weakCat = getWeakestCategory(reportData, analysisData);
+      setWeakestCategory(weakCat);
+      setCoachStep(1); // Show alert first
+      fetchRecommendedExercise(weakCat);
+    }
+  }, [reportData, phase]);
+
+  async function fetchRecommendedExercise(category) {
+    setLoadingExercise(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/exercises/all?category=${category}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = await res.json();
+      if (res.ok && data.length > 0) {
+        setRecommendedExercise(data[0]);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingExercise(false);
+    }
+  }
+
+  async function loadExerciseSentences(exerciseId) {
+    setLoadingSentences(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/exercises/practice-sentences/${exerciseId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = await res.json();
+      if (res.ok) setExerciseSentences(data.sentences);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingSentences(false);
+    }
+  }
+
+  async function assignRecommendedProgram() {
+    const token = localStorage.getItem('token');
+    const progName = PROGRAM_RECOMMENDATIONS[weakestCategory]?.program;
+    if (!progName) return;
+
+    setAssigningProgram(true);
+    try {
+      // Get all programs first
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/programs/all`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const programs = await res.json();
+      const match = programs.find(p => p.title === progName);
+      if (!match) return;
+
+      // Assign
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/programs/assign/${match.id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProgramAssigned(true);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAssigningProgram(false);
+    }
+  }
 
   async function startRecording() {
     setError('');
@@ -117,9 +237,7 @@ export default function Record() {
         return;
       }
 
-      if (!res.ok) throw new Error(
-        typeof data.detail === 'string' ? data.detail : 'Upload failed'
-      );
+      if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Upload failed');
 
       setRecordingId(data.id);
       setPhase('transcribing');
@@ -156,9 +274,7 @@ export default function Record() {
         return;
       }
 
-      if (!res.ok) throw new Error(
-        typeof data.detail === 'string' ? data.detail : 'Upload failed'
-      );
+      if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Upload failed');
 
       setRecordingId(data.id);
       setPhase('transcribing');
@@ -206,10 +322,17 @@ export default function Record() {
     setReportData(null);
     setShowUpgrade(false);
     setError('');
+    setCoachStep(0);
+    setRecommendedExercise(null);
+    setExerciseSentences([]);
+    setProgramAssigned(false);
+    setWeakestCategory(null);
     clearInterval(pollRef.current);
   }
 
   const fmt = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  const catMeta = weakestCategory ? CATEGORY_LABELS[weakestCategory] : null;
+  const progRec = weakestCategory ? PROGRAM_RECOMMENDATIONS[weakestCategory] : null;
 
   return (
     <div className={styles.page}>
@@ -226,15 +349,6 @@ export default function Record() {
           <div className={styles.navRight}>
             <span className={styles.pill}>Voice Assessment</span>
             <button className={styles.btnGhost} onClick={() => router.push('/dashboard')}>Dashboard</button>
-            <button
-              className={styles.btnPrimary}
-              onClick={() => {
-                const reportId = reportData?.id;
-                router.push(reportId ? `/exercises?report_id=${reportId}` : '/exercises');
-              }}
-            >
-              View My Exercises
-            </button>
           </div>
         </div>
       </nav>
@@ -260,13 +374,7 @@ export default function Record() {
             </p>
             <label className={styles.uploadBtn}>
               {uploading ? 'Uploading...' : 'Choose Audio File'}
-              <input
-                type="file"
-                accept="audio/*"
-                onChange={uploadFromFile}
-                style={{ display: 'none' }}
-                disabled={uploading}
-              />
+              <input type="file" accept="audio/*" onChange={uploadFromFile} style={{ display: 'none' }} disabled={uploading} />
             </label>
             <p className={styles.uploadHint}>Supports MP3, WAV, M4A, WebM</p>
           </div>
@@ -274,14 +382,10 @@ export default function Record() {
 
         {error && <div className={styles.errorBox}>{error}</div>}
 
-        {/* UPGRADE BANNER */}
         {showUpgrade && (
           <div className={styles.upgradeBanner}>
             <p>🔒 You have reached your free plan limit.</p>
-            <button
-              className={styles.btnPrimary}
-              onClick={() => router.push('/pricing')}
-            >
+            <button className={styles.btnPrimary} onClick={() => router.push('/pricing')}>
               Upgrade to Pro — $19/month
             </button>
           </div>
@@ -327,18 +431,12 @@ export default function Record() {
             </button>
           </div>
 
-          {/* WAVEFORM */}
           <div className={styles.waveform}>
             {bars.map((h, i) => (
-              <span
-                key={i}
-                style={{ height: `${h}px` }}
-                className={phase === 'recording' ? styles.barActive : styles.bar}
-              />
+              <span key={i} style={{ height: `${h}px` }} className={phase === 'recording' ? styles.barActive : styles.bar} />
             ))}
           </div>
 
-          {/* STATUS */}
           <p className={styles.statusText}>
             {phase === 'idle' && 'Tap the microphone to begin your 60-second assessment'}
             {phase === 'recording' && '🔴 Recording — tap stop when finished'}
@@ -347,7 +445,6 @@ export default function Record() {
             {phase === 'done' && '✅ Analysis complete'}
           </p>
 
-          {/* PLAYBACK */}
           {(phase === 'recorded' || phase === 'transcribing' || phase === 'done') && audioUrl && (
             <div className={styles.playbackSection}>
               <p className={styles.playbackLabel}>Your Recording</p>
@@ -363,7 +460,6 @@ export default function Record() {
             </div>
           )}
 
-          {/* TRANSCRIBING LOADER */}
           {phase === 'transcribing' && (
             <div className={styles.transcribingBox}>
               <div className={styles.spinner}></div>
@@ -372,223 +468,218 @@ export default function Record() {
           )}
         </div>
 
+        {/* ═══════════════════════════════════════════
+            GUIDED COACHING FLOW — STEP 1: ALERT
+        ═══════════════════════════════════════════ */}
+        {phase === 'done' && coachStep >= 1 && reportData && (
+          <div className={styles.coachAlert}>
+            <div className={styles.coachAlertHeader}>
+              <span className={styles.coachAlertIcon}>🎯</span>
+              <div>
+                <p className={styles.coachAlertTitle}>Your Voice Coach Has Assessed You</p>
+                <p className={styles.coachAlertSub}>Authority Score: <strong style={{ color: 'var(--gold)' }}>{reportData.authority_score}/100</strong> — {reportData.feedback?.user_level}</p>
+              </div>
+            </div>
+
+            {/* Score bars */}
+            <div className={styles.coachScoreBars}>
+              {[
+                { label: 'Strong Endings', score: reportData.ending_score,  color: 'var(--gold)' },
+                { label: 'Pause Control',  score: reportData.pause_score,   color: 'var(--teal)' },
+                { label: 'Pace Control',   score: reportData.pace_score,    color: 'var(--green)' },
+                { label: 'Pitch Variety',  score: reportData.pitch_score,   color: 'var(--purple)' },
+              ].map((item, i) => (
+                <div key={i} className={styles.coachBarRow}>
+                  <span className={styles.coachBarLabel}>{item.label}</span>
+                  <div className={styles.coachBarTrack}>
+                    <div className={styles.coachBarFill} style={{ width: `${item.score}%`, background: item.color }} />
+                  </div>
+                  <span className={styles.coachBarScore} style={{ color: item.color }}>{item.score}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Weakness highlight */}
+            {catMeta && (
+              <div className={styles.coachWeaknessBox} style={{ borderColor: `${catMeta.color}44`, background: `${catMeta.color}0d` }}>
+                <p className={styles.coachWeaknessLabel}>Your biggest area to work on:</p>
+                <p className={styles.coachWeaknessTitle} style={{ color: catMeta.color }}>
+                  {catMeta.icon} {catMeta.label}
+                </p>
+                {reportData.feedback?.weaknesses?.length > 0 && (
+                  <p className={styles.coachWeaknessDetail}>⚠️ {reportData.feedback.weaknesses[0]}</p>
+                )}
+              </div>
+            )}
+
+            {coachStep === 1 && (
+              <div className={styles.coachActions}>
+                <button
+                  className={styles.btnPrimaryCoach}
+                  onClick={() => {
+                    setCoachStep(2);
+                    if (recommendedExercise) loadExerciseSentences(recommendedExercise.id);
+                  }}
+                >
+                  Start Your First Exercise →
+                </button>
+                <button className={styles.btnGhostCoach} onClick={() => router.push('/dashboard')}>
+                  Go to Dashboard
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════
+            GUIDED COACHING FLOW — STEP 2: EXERCISE
+        ═══════════════════════════════════════════ */}
+        {phase === 'done' && coachStep >= 2 && (
+          <div className={styles.coachExercise}>
+            <div className={styles.coachExerciseHeader}>
+              <div className={styles.coachStep}>Step 1 of 2</div>
+              <p className={styles.eyebrow}>Your First Exercise</p>
+              <h2 className={styles.coachExerciseTitle}>
+                {loadingExercise ? 'Loading exercise...' : recommendedExercise?.title}
+              </h2>
+            </div>
+
+            {recommendedExercise && !loadingExercise && (
+              <>
+                <div className={styles.instructionBox}>
+                  <p className={styles.instructionLabel}>How to practice</p>
+                  <p className={styles.instructionText}>{recommendedExercise.instruction}</p>
+                </div>
+
+                {/* Wrong / Correct audio */}
+                {(recommendedExercise.wrong_audio_url || recommendedExercise.correct_audio_url) && (
+                  <div className={styles.audioExamples}>
+                    {recommendedExercise.wrong_audio_url && (
+                      <div className={styles.audioExample}>
+                        <div className={styles.audioExampleHeader}>
+                          <span className={styles.wrongDot}></span>
+                          <p className={styles.audioExampleLabel}>Wrong Example</p>
+                        </div>
+                        <audio controls src={recommendedExercise.wrong_audio_url} className={styles.audioExamplePlayer} preload="none" />
+                      </div>
+                    )}
+                    {recommendedExercise.correct_audio_url && (
+                      <div className={styles.audioExample}>
+                        <div className={styles.audioExampleHeader}>
+                          <span className={styles.correctDot}></span>
+                          <p className={styles.audioExampleLabel}>Correct Example</p>
+                        </div>
+                        <audio controls src={recommendedExercise.correct_audio_url} className={styles.audioExamplePlayer} preload="none" />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Practice template */}
+                <div className={styles.templateBox}>
+                  <p className={styles.templateLabel}>Practice Template</p>
+                  <p className={styles.templateText}>"{recommendedExercise.practice_template}"</p>
+                </div>
+
+                {/* AI Practice Sentences */}
+                <div className={styles.sentencesBox}>
+                  <p className={styles.sentencesLabel}>
+                    AI Generated Practice Sentences
+                    <span className={styles.aiTag}>GPT-4</span>
+                  </p>
+                  {loadingSentences ? (
+                    <div className={styles.sentencesLoading}>
+                      <div className={styles.spinnerSmall}></div>
+                      <span>Generating custom sentences...</span>
+                    </div>
+                  ) : (
+                    <div className={styles.sentencesList}>
+                      {exerciseSentences.map((s, i) => (
+                        <div key={i} className={styles.sentenceItem}>
+                          <span className={styles.sentenceNum}>{i + 1}</span>
+                          <p className={styles.sentenceText}>"{s}"</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className={styles.practiceNote}>
+                  <span>🎯</span>
+                  <p>Repeat each sentence 5 times. Record yourself on the last attempt and compare.</p>
+                </div>
+
+                {coachStep === 2 && (
+                  <div className={styles.coachActions} style={{ marginTop: '20px' }}>
+                    <button
+                      className={styles.btnPrimaryCoach}
+                      onClick={() => setCoachStep(3)}
+                    >
+                      Exercise Done — Next Step →
+                    </button>
+                    <button className={styles.btnGhostCoach} onClick={() => router.push(`/exercises?report_id=${reportData.id}`)}>
+                      See All Recommended Exercises
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════
+            GUIDED COACHING FLOW — STEP 3: PROGRAM
+        ═══════════════════════════════════════════ */}
+        {phase === 'done' && coachStep >= 3 && progRec && (
+          <div className={styles.coachProgram}>
+            <div className={styles.coachStep}>Step 2 of 2</div>
+            <p className={styles.eyebrow}>Recommended Program</p>
+            <h2 className={styles.coachProgramTitle}>🏆 {progRec.program}</h2>
+            <p className={styles.coachProgramDesc}>
+              Based on your assessment, this 30-day program {progRec.reason}. One daily exercise — delivered to your inbox every morning at 8 AM.
+            </p>
+
+            {!programAssigned ? (
+              <div className={styles.coachActions}>
+                <button
+                  className={styles.btnPrimaryCoach}
+                  onClick={assignRecommendedProgram}
+                  disabled={assigningProgram}
+                >
+                  {assigningProgram ? 'Starting Program...' : `Start ${progRec.program} →`}
+                </button>
+                <button className={styles.btnGhostCoach} onClick={() => router.push('/programs')}>
+                  Browse All Programs
+                </button>
+              </div>
+            ) : (
+              <div className={styles.coachSuccess}>
+                <span>✅</span>
+                <div>
+                  <p className={styles.coachSuccessTitle}>Program Started!</p>
+                  <p className={styles.coachSuccessDesc}>Your first daily exercise will arrive tomorrow at 8 AM. Keep practicing!</p>
+                </div>
+              </div>
+            )}
+
+            {programAssigned && (
+              <div className={styles.coachFinalActions}>
+                <button className={styles.btnPrimaryCoach} onClick={() => router.push('/dashboard')}>
+                  Go to Dashboard
+                </button>
+                <button className={styles.btnGhostCoach} onClick={reset}>
+                  Record Again
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* TRANSCRIPT */}
-        {phase === 'done' && transcript && (
+        {phase === 'done' && transcript && coachStep === 0 && (
           <div className={styles.transcriptCard}>
             <p className={styles.eyebrow}>Transcript</p>
             <p className={styles.transcriptText}>{transcript}</p>
-            <div className={styles.transcriptActions}>
-              <button className={styles.btnGhost} onClick={reset}>Record Again</button>
-              <button className={styles.btnPrimary} onClick={() => router.push('/dashboard')}>
-                Go to Dashboard
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* AUTHORITY SCORE DASHBOARD */}
-        {phase === 'done' && reportData && (
-          <div className={styles.scoresDashboard}>
-            <p className={styles.eyebrow}>Your Authority Report</p>
-
-            <div className={styles.authorityMain}>
-              <div className={styles.authorityLeft}>
-                <p className={styles.authorityLabel}>Authority Score</p>
-                <div className={styles.authorityBig}>
-                  <span style={{ color: 'var(--gold)' }}>{reportData.authority_score}</span>
-                  <span className={styles.authorityMax}>/100</span>
-                </div>
-                <span className={styles.levelBadge}>{reportData.feedback?.user_level}</span>
-              </div>
-              <div className={styles.authorityRight}>
-                <div className={styles.targetBox}>
-                  <div>
-                    <p className={styles.targetLabel}>Target</p>
-                    <p className={styles.targetValue}>{reportData.feedback?.target_score}</p>
-                  </div>
-                  <div>
-                    <p className={styles.targetLabel}>Progress</p>
-                    <p className={styles.targetValue} style={{ color: 'var(--green)' }}>
-                      {reportData.feedback?.progress_to_target}%
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.scoreBars}>
-              {[
-                { label: 'Strong Endings', score: reportData.ending_score,           color: 'var(--gold)',   weight: '25%' },
-                { label: 'Pause Control',  score: reportData.pause_score,            color: 'var(--teal)',   weight: '20%' },
-                { label: 'Pace Control',   score: reportData.pace_score,             color: 'var(--green)',  weight: '20%' },
-                { label: 'Pitch Variety',  score: reportData.pitch_score,            color: 'var(--purple)', weight: '15%' },
-                { label: 'Vocal Energy',   score: reportData.feedback?.energy_score, color: 'var(--teal)',   weight: '10%' },
-                { label: 'Filler Control', score: reportData.feedback?.filler_score, color: 'var(--gold)',   weight: '10%' },
-              ].map((item, i) => (
-                <div key={i} className={styles.scoreBarRow}>
-                  <div className={styles.scoreBarMeta}>
-                    <span className={styles.scoreBarLabel}>{item.label}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span className={styles.scoreBarWeight}>{item.weight}</span>
-                      <span className={styles.scoreBarValue} style={{ color: item.color }}>{item.score}</span>
-                    </div>
-                  </div>
-                  <div className={styles.scoreBarTrack}>
-                    <div className={styles.scoreBarFill} style={{ width: `${item.score}%`, background: item.color }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className={styles.otherScores}>
-              {[
-                { label: 'Confidence Score', score: reportData.confidence_score, color: 'var(--teal)' },
-                { label: 'Presence Score',   score: reportData.presence_score,   color: 'var(--purple)' },
-                { label: 'Leadership Score', score: reportData.leadership_score, color: 'var(--green)' },
-              ].map((item, i) => (
-                <div key={i} className={styles.otherScoreCard}>
-                  <p className={styles.otherScoreLabel}>{item.label}</p>
-                  <p className={styles.otherScoreValue} style={{ color: item.color }}>{item.score}</p>
-                  <div className={styles.scoreBarTrack} style={{ marginTop: '8px' }}>
-                    <div className={styles.scoreBarFill} style={{ width: `${item.score}%`, background: item.color }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* AI FEEDBACK */}
-        {phase === 'done' && reportData?.feedback?.feedback_text && (
-          <div className={styles.feedbackCard}>
-            <p className={styles.eyebrow}>AI Coach Feedback</p>
-            <p className={styles.feedbackText}>{reportData.feedback.feedback_text}</p>
-
-            {reportData.feedback.weaknesses?.length > 0 && (
-              <div className={styles.feedbackSection}>
-                <p className={styles.feedbackSectionTitle}>Main Weaknesses</p>
-                <div className={styles.feedbackTags}>
-                  {reportData.feedback.weaknesses.map((w, i) => (
-                    <span key={i} className={styles.weaknessTag}>⚠️ {w}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {reportData.feedback.strengths?.length > 0 && (
-              <div className={styles.feedbackSection}>
-                <p className={styles.feedbackSectionTitle}>Strengths</p>
-                <div className={styles.feedbackTags}>
-                  {reportData.feedback.strengths.map((s, i) => (
-                    <span key={i} className={styles.strengthTag}>✅ {s}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ACOUSTIC ANALYSIS */}
-        {phase === 'done' && analysisData && (
-          <div className={styles.analysisCard}>
-            <p className={styles.eyebrow}>Acoustic Analysis</p>
-            <div className={styles.analysisGrid}>
-              <div className={styles.analysisStat}>
-                <p className={styles.analysisLabel}>Speaking Rate</p>
-                <p className={styles.analysisValue} style={{
-                  color: analysisData.wpm_status === 'optimal' ? 'var(--green)' : 'var(--red)'
-                }}>
-                  {analysisData.speaking_rate_wpm}<span> WPM</span>
-                </p>
-                <p className={styles.analysisHint}>
-                  {analysisData.wpm_status === 'optimal' && '✅ Perfect pace (130–160 WPM)'}
-                  {analysisData.wpm_status === 'too_fast' && '⚠️ Too fast — slow down'}
-                  {analysisData.wpm_status === 'too_slow' && '⚠️ Too slow — pick up pace'}
-                </p>
-              </div>
-
-              <div className={styles.analysisStat}>
-                <p className={styles.analysisLabel}>Pauses Detected</p>
-                <p className={styles.analysisValue} style={{ color: 'var(--teal)' }}>
-                  {analysisData.pause_count}<span> pauses</span>
-                </p>
-                <p className={styles.analysisHint}>Avg duration: {analysisData.avg_pause_duration}s</p>
-              </div>
-
-              <div className={styles.analysisStat}>
-                <p className={styles.analysisLabel}>Pitch Range</p>
-                <p className={styles.analysisValue} style={{
-                  color: analysisData.pitch_status === 'good' ? 'var(--green)' : 'var(--gold)'
-                }}>
-                  {analysisData.pitch_range_hz}<span> Hz</span>
-                </p>
-                <p className={styles.analysisHint}>
-                  {analysisData.pitch_status === 'monotone' && '⚠️ Monotone — add more variation'}
-                  {analysisData.pitch_status === 'good' && '✅ Good vocal variety'}
-                  {analysisData.pitch_status === 'very_varied' && '✅ Very expressive'}
-                </p>
-              </div>
-
-              <div className={styles.analysisStat}>
-                <p className={styles.analysisLabel}>Filler Words</p>
-                <p className={styles.analysisValue} style={{
-                  color: analysisData.filler_status === 'excellent' ? 'var(--green)' : 'var(--red)'
-                }}>
-                  {analysisData.total_fillers}<span> found</span>
-                </p>
-                <p className={styles.analysisHint}>{analysisData.filler_percent}% of total words</p>
-              </div>
-
-              <div className={styles.analysisStat}>
-                <p className={styles.analysisLabel}>Sentence Endings</p>
-                <p className={styles.analysisValue} style={{
-                  color: analysisData.ending_status === 'strong' ? 'var(--green)' : 'var(--red)'
-                }}>
-                  {analysisData.downward_endings}<span> strong</span>
-                </p>
-                <p className={styles.analysisHint}>{analysisData.upward_endings} weak (upward) endings</p>
-              </div>
-
-              <div className={styles.analysisStat}>
-                <p className={styles.analysisLabel}>Recording Duration</p>
-                <p className={styles.analysisValue} style={{ color: 'var(--purple)' }}>
-                  {analysisData.duration_seconds}<span> sec</span>
-                </p>
-                <p className={styles.analysisHint}>{analysisData.word_count} words spoken</p>
-              </div>
-            </div>
-
-            {analysisData.pitch_values && analysisData.pitch_values.length > 0 && (
-              <div className={styles.pitchGraph}>
-                <p className={styles.analysisLabel} style={{ marginBottom: '12px' }}>Pitch Movement</p>
-                <div className={styles.graphWrap}>
-                  {analysisData.pitch_values.map((val, i) => {
-                    const max = Math.max(...analysisData.pitch_values);
-                    const min = Math.min(...analysisData.pitch_values);
-                    const height = max === min ? 50 : ((val - min) / (max - min)) * 80 + 10;
-                    return (
-                      <div key={i} className={styles.graphBar} style={{ height: `${height}px` }} title={`${val} Hz`} />
-                    );
-                  })}
-                </div>
-                <div className={styles.graphLabels}>
-                  <span>Start</span>
-                  <span>{analysisData.pitch_mean_hz} Hz avg</span>
-                  <span>End</span>
-                </div>
-              </div>
-            )}
-
-            {analysisData.filler_words && Object.keys(analysisData.filler_words).length > 0 && (
-              <div className={styles.fillerBreakdown}>
-                <p className={styles.analysisLabel} style={{ marginBottom: '10px' }}>Filler Word Breakdown</p>
-                <div className={styles.fillerTags}>
-                  {Object.entries(analysisData.filler_words).map(([word, count]) => (
-                    <span key={word} className={styles.fillerTag}>"{word}" × {count}</span>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
 
