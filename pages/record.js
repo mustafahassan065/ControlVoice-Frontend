@@ -304,6 +304,28 @@ export default function Record() {
 
   return (
     <div className={styles.page}>
+
+      {/* FIXED UPGRADE TOAST — always visible */}
+      {showUpgrade && (
+        <div className={styles.fixedToastOverlay}>
+          <div className={styles.fixedToast}>
+            <div className={styles.fixedToastLeft}>
+              <span className={styles.fixedToastIcon}>🔒</span>
+              <div>
+                <p className={styles.fixedToastTitle}>Free Plan Limit Reached</p>
+                <p className={styles.fixedToastSub}>Upgrade to Pro to record unlimited voice assessments.</p>
+              </div>
+            </div>
+            <div className={styles.fixedToastActions}>
+              <button className={styles.fixedToastBtn} onClick={() => router.push('/pricing')}>
+                Upgrade to Pro
+              </button>
+              <button className={styles.fixedToastClose} onClick={() => setShowUpgrade(false)}>✕</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <nav className={styles.navbar}>
         <div className={styles.navInner}>
           <div className={styles.logo} onClick={() => router.push('/')}>
@@ -347,12 +369,6 @@ export default function Record() {
         )}
 
         {error && <div className={styles.errorBox}>{error}</div>}
-        {showUpgrade && (
-          <div className={styles.upgradeBanner}>
-            <p>🔒 You have reached your free plan limit.</p>
-            <button className={styles.btnPrimary} onClick={() => router.push('/pricing')}>Upgrade to Pro — $19/month</button>
-          </div>
-        )}
 
         <div className={styles.recorderCard}>
           <div className={styles.timer}>
