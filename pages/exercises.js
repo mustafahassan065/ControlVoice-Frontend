@@ -239,13 +239,13 @@ export default function Exercises() {
                       {/* GPT-4 PRACTICE SENTENCES */}
                       <div className={styles.sentencesBox}>
                         <p className={styles.sentencesLabel}>
-                          AI Generated Practice Sentences
-                          <span className={styles.aiTag}>GPT-4</span>
+                          Voice Control AI Practice Sentences
+                          <span className={styles.aiTag}>AI</span>
                         </p>
                         {loadingSentences ? (
                           <div className={styles.sentencesLoading}>
                             <div className={styles.spinnerSmall}></div>
-                            <span>Generating custom sentences...</span>
+                            <span>Generating practice sentences...</span>
                           </div>
                         ) : (
                           <div className={styles.sentencesList}>

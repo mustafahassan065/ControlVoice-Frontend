@@ -415,7 +415,7 @@ export default function Record() {
           {phase === 'transcribing' && (
             <div className={styles.transcribingBox}>
               <div className={styles.spinner}></div>
-              <p>Whisper AI is transcribing and analyzing your voice...</p>
+              <p>Voice Control AI is analyzing your voice...</p>
             </div>
           )}
         </div>
@@ -705,7 +705,7 @@ export default function Record() {
                   <p className={styles.templateText}>"{recommendedExercise.practice_template}"</p>
                 </div>
                 <div className={styles.sentencesBox}>
-                  <p className={styles.sentencesLabel}>AI Generated Practice Sentences<span className={styles.aiTag}>GPT-4</span></p>
+                  <p className={styles.sentencesLabel}>Voice Control AI Practice Sentences<span className={styles.aiTag}>AI</span></p>
                   {loadingSentences ? (
                     <div className={styles.sentencesLoading}><div className={styles.spinnerSmall}></div><span>Generating...</span></div>
                   ) : (

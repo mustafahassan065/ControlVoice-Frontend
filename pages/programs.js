@@ -30,12 +30,27 @@ export default function Programs() {
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(null);
+  const [userPlan, setUserPlan] = useState('free');
+  const [toast, setToast] = useState(null); // sticky upgrade toast
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) { router.push('/login'); return; }
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const u = JSON.parse(userData);
+      setUserPlan(u.plan || 'free');
+    }
     fetchPrograms(token);
   }, []);
+
+  // Auto dismiss toast after 6s but keep it visible until dismissed
+  useEffect(() => {
+    if (toast) {
+      const t = setTimeout(() => setToast(null), 6000);
+      return () => clearTimeout(t);
+    }
+  }, [toast]);
 
   async function fetchPrograms(token) {
     try {
@@ -52,6 +67,16 @@ export default function Programs() {
   }
 
   async function assignProgram(programId) {
+    // Free plan check
+    if (userPlan === 'free') {
+      setToast({
+        type: 'upgrade',
+        message: 'Training programs are available on Pro and Executive plans.',
+        action: 'Upgrade Now',
+      });
+      return;
+    }
+
     setAssigning(programId);
     try {
       const token = localStorage.getItem('token');
@@ -60,6 +85,17 @@ export default function Programs() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
+
+      // Handle 403 from backend too
+      if (res.status === 403) {
+        setToast({
+          type: 'upgrade',
+          message: data.detail?.message || 'Upgrade your plan to access training programs.',
+          action: 'Upgrade Now',
+        });
+        return;
+      }
+
       if (res.ok) fetchPrograms(token);
     } catch (err) {
       console.error(err);
@@ -83,6 +119,37 @@ export default function Programs() {
 
   return (
     <div className={styles.page}>
+
+      {/* STICKY UPGRADE TOAST */}
+      {toast && (
+        <div className={styles.toastOverlay}>
+          <div className={`${styles.toast} ${toast.type === 'upgrade' ? styles.toastUpgrade : ''}`}>
+            <div className={styles.toastContent}>
+              <span className={styles.toastIcon}>🔒</span>
+              <div>
+                <p className={styles.toastTitle}>Upgrade Required</p>
+                <p className={styles.toastMessage}>{toast.message}</p>
+              </div>
+            </div>
+            <div className={styles.toastActions}>
+              <button
+                className={styles.toastBtn}
+                onClick={() => router.push('/pricing')}
+              >
+                {toast.action}
+              </button>
+              <button
+                className={styles.toastClose}
+                onClick={() => setToast(null)}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <nav className={styles.navbar}>
         <div className={styles.navInner}>
           <div className={styles.logo} onClick={() => router.push('/')}>
@@ -107,6 +174,22 @@ export default function Programs() {
           <p className={styles.sub}>Each program is 30 days. One daily exercise. Real improvement.</p>
         </div>
 
+        {/* FREE PLAN BANNER */}
+        {userPlan === 'free' && (
+          <div className={styles.freeBanner}>
+            <div className={styles.freeBannerLeft}>
+              <span className={styles.freeBannerIcon}>🔒</span>
+              <div>
+                <p className={styles.freeBannerTitle}>Training Programs require a paid plan</p>
+                <p className={styles.freeBannerSub}>Upgrade to Pro to unlock all 4 programs and start your 30-day journey.</p>
+              </div>
+            </div>
+            <button className={styles.freeBannerBtn} onClick={() => router.push('/pricing')}>
+              Upgrade to Pro
+            </button>
+          </div>
+        )}
+
         {loading ? (
           <div className={styles.loadingBox}>
             <div className={styles.spinner}></div>
@@ -121,14 +204,19 @@ export default function Programs() {
               const isCompleted = up?.status === 'completed';
               const isPaused = up?.status === 'paused';
               const progress = up ? Math.round((up.current_day / program.duration_days) * 100) : 0;
+              const isLocked = userPlan === 'free';
 
               return (
                 <div
                   key={program.id}
-                  className={`${styles.programCard} ${isActive ? styles.programCardActive : ''}`}
+                  className={`${styles.programCard} ${isActive ? styles.programCardActive : ''} ${isLocked ? styles.programCardLocked : ''}`}
                   style={isActive ? { borderColor: meta.color } : {}}
                 >
-                  {/* ACTIVE BADGE */}
+                  {/* LOCK OVERLAY for free users */}
+                  {isLocked && (
+                    <div className={styles.lockBadge}>🔒 Pro</div>
+                  )}
+
                   {isActive && (
                     <div className={styles.activeBadge} style={{ background: `${meta.color}22`, color: meta.color, borderColor: `${meta.color}44` }}>
                       Active Program
@@ -147,14 +235,12 @@ export default function Programs() {
                   <h2 className={styles.programTitle}>{program.title}</h2>
                   <p className={styles.programDesc}>{program.description}</p>
 
-                  {/* FOCUS TAGS */}
                   <div className={styles.tagRow}>
                     {meta.tags.map((tag, i) => (
                       <span key={i} className={styles.tag}>{tag}</span>
                     ))}
                   </div>
 
-                  {/* DURATION */}
                   <div className={styles.durationRow}>
                     <span className={styles.durationText}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -170,72 +256,43 @@ export default function Programs() {
                     </span>
                   </div>
 
-                  {/* PROGRESS (if enrolled) */}
                   {up && (
                     <div className={styles.progressSection}>
                       <div className={styles.progressHeader}>
-                        <span className={styles.progressDay}>
-                          Day {up.current_day} of {program.duration_days}
-                        </span>
-                        <span className={styles.progressPercent} style={{ color: meta.color }}>
-                          {progress}%
-                        </span>
+                        <span className={styles.progressDay}>Day {up.current_day} of {program.duration_days}</span>
+                        <span className={styles.progressPercent} style={{ color: meta.color }}>{progress}%</span>
                       </div>
                       <div className={styles.progressTrack}>
-                        <div
-                          className={styles.progressFill}
-                          style={{ width: `${progress}%`, background: meta.color }}
-                        />
+                        <div className={styles.progressFill} style={{ width: `${progress}%`, background: meta.color }} />
                       </div>
-                      {isPaused && (
-                        <p className={styles.pausedText}>⏸ Paused — start a new program to resume</p>
-                      )}
+                      {isPaused && <p className={styles.pausedText}>⏸ Paused — start a new program to resume</p>}
                     </div>
                   )}
 
-                  {/* ACTION BUTTON */}
                   <div className={styles.cardActions}>
                     {!up && (
                       <button
                         className={styles.btnPrimary}
-                        style={{ background: meta.color }}
+                        style={{ background: isLocked ? 'rgba(255,255,255,0.1)' : meta.color }}
                         onClick={() => assignProgram(program.id)}
                         disabled={assigning === program.id}
                       >
-                        {assigning === program.id ? 'Starting...' : 'Start Program'}
+                        {assigning === program.id ? 'Starting...' : isLocked ? '🔒 Upgrade to Start' : 'Start Program'}
                       </button>
                     )}
                     {isActive && (
                       <>
-                        <button
-                          className={styles.btnPrimary}
-                          style={{ background: meta.color }}
-                          onClick={() => markDayComplete(up.id)}
-                        >
+                        <button className={styles.btnPrimary} style={{ background: meta.color }} onClick={() => markDayComplete(up.id)}>
                           ✓ Complete Day {up.current_day}
                         </button>
-                        <button
-                          className={styles.btnGhost}
-                          onClick={() => router.push('/exercises')}
-                        >
-                          Today's Exercise
-                        </button>
+                        <button className={styles.btnGhost} onClick={() => router.push('/exercises')}>Today's Exercise</button>
                       </>
                     )}
                     {isCompleted && (
-                      <button
-                        className={styles.btnGhost}
-                        onClick={() => assignProgram(program.id)}
-                      >
-                        Restart Program
-                      </button>
+                      <button className={styles.btnGhost} onClick={() => assignProgram(program.id)}>Restart Program</button>
                     )}
                     {isPaused && (
-                      <button
-                        className={styles.btnGhost}
-                        onClick={() => assignProgram(program.id)}
-                        disabled={assigning === program.id}
-                      >
+                      <button className={styles.btnGhost} onClick={() => assignProgram(program.id)} disabled={assigning === program.id}>
                         {assigning === program.id ? 'Starting...' : 'Switch to This Program'}
                       </button>
                     )}

@@ -51,3 +51,116 @@
 .btnPrimary { border: none; color: #0A0E1A; padding: 11px; font-size: 14px; font-weight: 700; border-radius: var(--radius-sm); transition: all 0.2s; opacity: 1; }
 .btnPrimary:hover:not(:disabled) { opacity: 0.88; }
 .btnPrimary:disabled { opacity: 0.5; cursor: not-allowed; }
+/* ═══ UPGRADE TOAST ═══ */
+.toastOverlay {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: calc(100% - 48px);
+  max-width: 540px;
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.toast {
+  background: var(--navy-2);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.toastUpgrade {
+  border: 1px solid var(--gold-border);
+  background: linear-gradient(135deg, rgba(201,168,76,0.1), var(--navy-2));
+}
+.toastContent { display: flex; align-items: flex-start; gap: 12px; flex: 1; }
+.toastIcon { font-size: 20px; flex-shrink: 0; }
+.toastTitle { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 3px; }
+.toastMessage { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+.toastActions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.toastBtn {
+  background: var(--gold);
+  border: none;
+  color: #0A0E1A;
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-body);
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.toastBtn:hover { background: var(--gold-light); }
+.toastClose {
+  background: transparent;
+  border: 1px solid var(--border-sub);
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.toastClose:hover { border-color: rgba(255,255,255,0.2); color: var(--white); }
+
+/* ═══ FREE PLAN BANNER ═══ */
+.freeBanner {
+  background: rgba(201,168,76,0.07);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius-md);
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.freeBannerLeft { display: flex; align-items: flex-start; gap: 12px; flex: 1; }
+.freeBannerIcon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+.freeBannerTitle { font-size: 14px; font-weight: 700; color: var(--gold-light); margin-bottom: 3px; }
+.freeBannerSub { font-size: 13px; color: var(--text-muted); }
+.freeBannerBtn {
+  background: var(--gold);
+  border: none;
+  color: #0A0E1A;
+  padding: 9px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-body);
+  white-space: nowrap;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.freeBannerBtn:hover { background: var(--gold-light); }
+
+/* ═══ LOCKED CARD ═══ */
+.programCardLocked { opacity: 0.75; }
+.lockBadge {
+  position: absolute;
+  top: -12px;
+  right: 16px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border-sub);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+}

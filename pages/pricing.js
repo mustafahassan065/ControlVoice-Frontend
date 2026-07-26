@@ -23,7 +23,7 @@ const PLANS = [
   {
     id: 'pro',
     name: 'Pro',
-    price: '$19',
+    price: '$9.99',
     period: '/month',
     color: 'var(--gold)',
     features: [
@@ -66,7 +66,6 @@ export default function Pricing() {
     const token = localStorage.getItem('token');
     if (!token) return;
     fetchSubscription(token);
-
     if (router.query.payment === 'canceled') {
       setMessage('Payment canceled. No charges made.');
     }
@@ -141,7 +140,6 @@ export default function Pricing() {
         <div className={styles.plansGrid}>
           {PLANS.map((plan) => {
             const isCurrent = currentPlan === plan.id;
-            const isUpgrade = !isCurrent && plan.id !== 'free';
 
             return (
               <div
@@ -168,7 +166,7 @@ export default function Pricing() {
                       <span style={{ color: f.included ? 'var(--green)' : 'var(--text-muted)' }}>
                         {f.included ? '✓' : '×'}
                       </span>
-                      <span style={{ color: f.included ? 'var(--text-dim)' : 'var(--text-muted)', textDecoration: f.included ? 'none' : 'none' }}>
+                      <span style={{ color: f.included ? 'var(--text-dim)' : 'var(--text-muted)' }}>
                         {f.text}
                       </span>
                     </li>
@@ -182,7 +180,7 @@ export default function Pricing() {
                   disabled={isCurrent || plan.id === 'free' || loading === plan.id}
                 >
                   {loading === plan.id
-                    ? 'Redirecting to Stripe...'
+                    ? 'Redirecting...'
                     : isCurrent
                     ? 'Current Plan'
                     : plan.cta}
@@ -190,12 +188,6 @@ export default function Pricing() {
               </div>
             );
           })}
-        </div>
-
-        {/* SANDBOX NOTICE */}
-        <div className={styles.sandboxNote}>
-          <span>🧪</span>
-          <p>Test mode active. Use card <strong>4242 4242 4242 4242</strong>, any future expiry, any CVC.</p>
         </div>
       </main>
     </div>
