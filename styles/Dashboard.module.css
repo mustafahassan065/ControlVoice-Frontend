@@ -184,3 +184,71 @@
 .audioExampleLabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); font-weight: 600; }
 .audioExamplePlayer { width: 100%; height: 36px; border-radius: var(--radius-sm); }
 @media(max-width: 500px) { .audioExamples { grid-template-columns: 1fr; } }
+/* ═══ XP LEVEL BAR ═══ */
+.xpCard {
+  background: var(--navy-2);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius-md);
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.xpHeader { display: flex; justify-content: space-between; align-items: center; }
+.xpLevel { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 3px; font-family: var(--font-display); }
+.xpPoints { font-size: 12px; color: var(--text-muted); }
+.xpBadge { background: var(--gold-dim); border: 1px solid var(--gold-border); color: var(--gold-light); padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.xpTrack { background: rgba(255,255,255,0.06); border-radius: 4px; height: 7px; }
+.xpFill { height: 7px; border-radius: 4px; background: linear-gradient(90deg, var(--gold), var(--gold-light)); transition: width 0.8s ease; }
+
+/* ═══ DAILY CHALLENGE ═══ */
+.challengeCard {
+  background: var(--navy-2);
+  border: 1px solid var(--border-sub);
+  border-radius: var(--radius-md);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-left: 3px solid var(--gold);
+}
+.challengeHeader { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.challengePrompt { font-family: var(--font-display); font-size: 16px; color: var(--white); font-style: italic; line-height: 1.5; margin-top: 6px; }
+.challengeDone { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: var(--green); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+.challengeMeta { display: flex; gap: 14px; }
+.challengeMetaItem { font-size: 12px; color: var(--text-muted); background: rgba(255,255,255,0.04); padding: 4px 10px; border-radius: 20px; }
+
+/* ═══ STREAK CALENDAR ═══ */
+.streakCard {
+  background: var(--navy-2);
+  border: 1px solid var(--border-sub);
+  border-radius: var(--radius-md);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.streakHeader { display: flex; justify-content: space-between; align-items: center; }
+.streakCount { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--white); margin-top: 4px; }
+.streakTotal { font-size: 12px; color: var(--text-muted); }
+.weekCalendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+.calDay { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px; border-radius: var(--radius-sm); background: rgba(255,255,255,0.03); border: 1px solid var(--border-sub); }
+.calDayDone { background: rgba(74,222,128,0.1); border-color: rgba(74,222,128,0.3); }
+.calDayToday { border-color: var(--gold-border); background: var(--gold-dim); }
+.calDayName { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.calDayIcon { font-size: 14px; color: var(--green); }
+.calDay:not(.calDayDone) .calDayIcon { color: var(--text-muted); }
+.calDayToday .calDayIcon { color: var(--gold); }
+
+/* ═══ CHALLENGE XP BADGE (record page) ═══ */
+.challengeXpBadge {
+  display: inline-flex;
+  background: rgba(74,222,128,0.1);
+  border: 1px solid rgba(74,222,128,0.25);
+  color: var(--green);
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 8px;
+}

@@ -20,6 +20,13 @@ const PROGRAM_RECOMMENDATIONS = {
   pace_control:   { program: 'Interview Confidence', reason: 'trains calm, measured delivery under pressure' },
 };
 
+const CHART_LINES = {
+  authority:  { key: 'authority_score',  color: '#C9A84C', label: 'Authority' },
+  confidence: { key: 'confidence_score', color: '#2DD4BF', label: 'Confidence' },
+  presence:   { key: 'presence_score',   color: '#A78BFA', label: 'Presence' },
+  leadership: { key: 'leadership_score', color: '#4ADE80', label: 'Leadership' },
+};
+
 function getWeakestCategory(progress) {
   if (!progress?.latest_authority) return null;
   const scores = {
@@ -38,8 +45,10 @@ export default function Dashboard() {
   const [recordings, setRecordings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeChart, setActiveChart] = useState('authority');
+  const [chartDays, setChartDays] = useState(30);
+  const [chartData, setChartData] = useState([]);
 
-  // Coaching panel states
+  // Coaching panel
   const [coachExpanded, setCoachExpanded] = useState(true);
   const [recommendedExercise, setRecommendedExercise] = useState(null);
   const [loadingExercise, setLoadingExercise] = useState(false);
@@ -49,6 +58,11 @@ export default function Dashboard() {
   const [assigningProgram, setAssigningProgram] = useState(false);
   const [programAssigned, setProgramAssigned] = useState(false);
   const [weakestCategory, setWeakestCategory] = useState(null);
+
+  // Phase 2A
+  const [todayChallenge, setTodayChallenge] = useState(null);
+  const [streak, setStreak] = useState(null);
+  const [xpData, setXpData] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -69,19 +83,21 @@ export default function Dashboard() {
     Promise.all([
       fetchProgress(token, u.id),
       fetchRecordings(token),
+      fetchTodayChallenge(token),
+      fetchStreak(token),
+      fetchXP(token),
+      fetchChartData(token, u.id, 30),
     ]).finally(() => setLoading(false));
   }, [router.query]);
 
   async function fetchProgress(token, userId) {
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/progress/${userId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/progress/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       const data = await res.json();
       if (res.ok) {
         setProgress(data);
-        // Weakest category identify karo
         const weakCat = getWeakestCategory(data);
         if (weakCat) {
           setWeakestCategory(weakCat);
@@ -93,12 +109,52 @@ export default function Dashboard() {
 
   async function fetchRecordings(token) {
     try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/audio/my-recordings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) setRecordings(data);
+    } catch (err) { console.error(err); }
+  }
+
+  async function fetchTodayChallenge(token) {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/challenges/today`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) setTodayChallenge(data);
+    } catch (err) { console.error(err); }
+  }
+
+  async function fetchStreak(token) {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/challenges/streak`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) setStreak(data);
+    } catch (err) { console.error(err); }
+  }
+
+  async function fetchXP(token) {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/challenges/xp`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) setXpData(data);
+    } catch (err) { console.error(err); }
+  }
+
+  async function fetchChartData(token, userId, days) {
+    try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/audio/my-recordings`,
+        `${process.env.NEXT_PUBLIC_API_URL}/progress/chart/${userId}?days=${days}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await res.json();
-      if (res.ok) setRecordings(data);
+      if (res.ok) setChartData(data.chart_data || []);
     } catch (err) { console.error(err); }
   }
 
@@ -111,9 +167,7 @@ export default function Dashboard() {
         { headers: { Authorization: `Bearer ${t}` } }
       );
       const data = await res.json();
-      if (res.ok && data.length > 0) {
-        setRecommendedExercise(data[0]);
-      }
+      if (res.ok && data.length > 0) setRecommendedExercise(data[0]);
     } catch (err) { console.error(err); }
     finally { setLoadingExercise(false); }
   }
@@ -145,13 +199,10 @@ export default function Dashboard() {
       const match = programs.find(p => p.title === progName);
       if (!match) return;
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/programs/assign/${match.id}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
+        method: 'POST', headers: { Authorization: `Bearer ${token}` }
       });
       setProgramAssigned(true);
-      // Refresh progress
-      const u = JSON.parse(localStorage.getItem('user'));
-      fetchProgress(token, u.id);
+      fetchProgress(token, JSON.parse(localStorage.getItem('user')).id);
     } catch (err) { console.error(err); }
     finally { setAssigningProgram(false); }
   }
@@ -159,13 +210,16 @@ export default function Dashboard() {
   async function markDayComplete(userProgramId) {
     try {
       const token = localStorage.getItem('token');
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/programs/progress/${userProgramId}`,
-        { method: 'POST', headers: { Authorization: `Bearer ${token}` } }
-      );
-      const u = JSON.parse(localStorage.getItem('user'));
-      fetchProgress(token, u.id);
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/programs/progress/${userProgramId}`, {
+        method: 'POST', headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchProgress(token, JSON.parse(localStorage.getItem('user')).id);
     } catch (err) { console.error(err); }
+  }
+
+  function startChallenge() {
+    if (!todayChallenge) return;
+    router.push(`/record?challenge_id=${todayChallenge.id}&prompt=${encodeURIComponent(todayChallenge.prompt)}`);
   }
 
   function logout() {
@@ -173,13 +227,6 @@ export default function Dashboard() {
     localStorage.removeItem('user');
     router.push('/');
   }
-
-  const CHART_LINES = {
-    authority:  { key: 'authority_score',  color: '#C9A84C', label: 'Authority' },
-    confidence: { key: 'confidence_score', color: '#2DD4BF', label: 'Confidence' },
-    presence:   { key: 'presence_score',   color: '#A78BFA', label: 'Presence' },
-    leadership: { key: 'leadership_score', color: '#4ADE80', label: 'Leadership' },
-  };
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -211,7 +258,6 @@ export default function Dashboard() {
 
   return (
     <div className={styles.page}>
-      {/* NAVBAR */}
       <nav className={styles.navbar}>
         <div className={styles.navInner}>
           <div className={styles.logo} onClick={() => router.push('/')}>
@@ -243,8 +289,7 @@ export default function Dashboard() {
             <p className={styles.eyebrow}>Dashboard</p>
             <h1 className={styles.heading}>Welcome back, {user?.name?.split(' ')[0]} 👋</h1>
             <p className={styles.sub}>
-              {progress?.user_level || 'Beginner Speaker'} —{' '}
-              {progress?.total_recordings || 0} recording{progress?.total_recordings !== 1 ? 's' : ''} submitted
+              {progress?.user_level || 'Beginner Speaker'} — {progress?.total_recordings || 0} recording{progress?.total_recordings !== 1 ? 's' : ''} submitted
             </p>
           </div>
           <button className={styles.btnPrimary} onClick={() => router.push('/record')}>
@@ -256,18 +301,86 @@ export default function Dashboard() {
           </button>
         </div>
 
+        {/* XP LEVEL BAR */}
+        {xpData && (
+          <div className={styles.xpCard}>
+            <div className={styles.xpHeader}>
+              <div>
+                <p className={styles.xpLevel}>Level {xpData.level} — {xpData.name}</p>
+                <p className={styles.xpPoints}>
+                  {xpData.xp} XP
+                  {xpData.next_level && ` · ${xpData.next_xp - xpData.xp} XP to ${xpData.next_level}`}
+                </p>
+              </div>
+              <span className={styles.xpBadge}>⭐ {xpData.xp} XP</span>
+            </div>
+            <div className={styles.xpTrack}>
+              <div className={styles.xpFill} style={{ width: `${xpData.progress}%` }} />
+            </div>
+          </div>
+        )}
+
+        {/* TODAY'S VOICE CHALLENGE */}
+        {todayChallenge && (
+          <div className={styles.challengeCard}>
+            <div className={styles.challengeHeader}>
+              <div>
+                <p className={styles.eyebrow}>Today's Voice Challenge</p>
+                <p className={styles.challengePrompt}>"{todayChallenge.prompt}"</p>
+              </div>
+              {todayChallenge.completed && (
+                <span className={styles.challengeDone}>✅ Done</span>
+              )}
+            </div>
+            <div className={styles.challengeMeta}>
+              <span className={styles.challengeMetaItem}>⏱ {todayChallenge.duration}</span>
+              <span className={styles.challengeMetaItem}>+{todayChallenge.xp_reward} XP</span>
+            </div>
+            {!todayChallenge.completed && (
+              <button className={styles.btnPrimary} onClick={startChallenge}>
+                Start Challenge →
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* STREAK CALENDAR */}
+        {streak && (
+          <div className={styles.streakCard}>
+            <div className={styles.streakHeader}>
+              <div>
+                <p className={styles.eyebrow}>Practice Streak</p>
+                <p className={styles.streakCount}>
+                  🔥 {streak.current_streak} Day{streak.current_streak !== 1 ? 's' : ''}
+                </p>
+              </div>
+              <p className={styles.streakTotal}>{streak.total_days} total practice days</p>
+            </div>
+            <div className={styles.weekCalendar}>
+              {streak.weekly_calendar.map((day, i) => (
+                <div
+                  key={i}
+                  className={`${styles.calDay} ${day.completed ? styles.calDayDone : ''} ${day.is_today ? styles.calDayToday : ''}`}
+                >
+                  <span className={styles.calDayName}>{day.day}</span>
+                  <span className={styles.calDayIcon}>
+                    {day.completed ? '✓' : day.is_today ? '·' : '—'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* STAT CARDS */}
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>
             <p className={styles.statLabel}>Plan</p>
             <p className={styles.statValue} style={{
-              color: user?.plan === 'executive' ? 'var(--purple)' :
-                     user?.plan === 'pro' ? 'var(--gold)' : 'var(--text-muted)',
-              textTransform: 'capitalize',
-              fontSize: '20px'
+              color: user?.plan === 'executive' ? 'var(--purple)' : user?.plan === 'pro' ? 'var(--gold)' : 'var(--text-muted)',
+              textTransform: 'capitalize', fontSize: '20px'
             }}>
-              {user?.plan === 'executive' ? '⭐ Executive' :
-               user?.plan === 'pro' ? '✨ Pro' : 'Free'}
+              {user?.plan === 'executive' ? '⭐ Executive' : user?.plan === 'pro' ? '✨ Pro' : 'Free'}
             </p>
             {user?.plan === 'free' && (
               <p className={styles.statChange} style={{ color: 'var(--gold)', cursor: 'pointer' }} onClick={() => router.push('/pricing')}>
@@ -277,9 +390,7 @@ export default function Dashboard() {
           </div>
           <div className={styles.statCard}>
             <p className={styles.statLabel}>Authority Score</p>
-            <p className={styles.statValue} style={{ color: 'var(--gold)' }}>
-              {progress?.latest_authority || '—'}
-            </p>
+            <p className={styles.statValue} style={{ color: 'var(--gold)' }}>{progress?.latest_authority || '—'}</p>
             {progress?.prev_authority && (
               <p className={styles.statChange} style={{ color: progress.latest_authority >= progress.prev_authority ? 'var(--green)' : 'var(--red)' }}>
                 {progress.latest_authority >= progress.prev_authority ? '↑' : '↓'} vs last recording
@@ -288,24 +399,22 @@ export default function Dashboard() {
           </div>
           <div className={styles.statCard}>
             <p className={styles.statLabel}>7-Day Improvement</p>
-            <p className={styles.statValue} style={{ color: progress?.seven_day_improvement >= 0 ? 'var(--green)' : 'var(--red)' }}>
-              {progress?.seven_day_improvement >= 0 ? '+' : ''}{progress?.seven_day_improvement || 0}
+            <p className={styles.statValue} style={{ color: (progress?.seven_day_improvement || 0) >= 0 ? 'var(--green)' : 'var(--red)' }}>
+              {(progress?.seven_day_improvement || 0) >= 0 ? '+' : ''}{progress?.seven_day_improvement || 0}
             </p>
             <p className={styles.statChange}>points gained</p>
           </div>
           <div className={styles.statCard}>
             <p className={styles.statLabel}>30-Day Improvement</p>
-            <p className={styles.statValue} style={{ color: progress?.thirty_day_improvement >= 0 ? 'var(--green)' : 'var(--red)' }}>
-              {progress?.thirty_day_improvement >= 0 ? '+' : ''}{progress?.thirty_day_improvement || 0}
+            <p className={styles.statValue} style={{ color: (progress?.thirty_day_improvement || 0) >= 0 ? 'var(--green)' : 'var(--red)' }}>
+              {(progress?.thirty_day_improvement || 0) >= 0 ? '+' : ''}{progress?.thirty_day_improvement || 0}
             </p>
             <p className={styles.statChange}>points gained</p>
           </div>
           <div className={styles.statCard}>
-            <p className={styles.statLabel}>Practice Streak</p>
-            <p className={styles.statValue} style={{ color: 'var(--teal)' }}>
-              {progress?.practice_streak || 0} 🔥
-            </p>
-            <p className={styles.statChange}>days in a row</p>
+            <p className={styles.statLabel}>Best Score</p>
+            <p className={styles.statValue} style={{ color: 'var(--gold)' }}>{progress?.best_authority || '—'}</p>
+            <p className={styles.statChange}>all time</p>
           </div>
           <div className={styles.statCard}>
             <p className={styles.statLabel}>Recordings</p>
@@ -314,12 +423,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ═══════════════════════════════════════════
-            SMART COACHING PANEL
-        ═══════════════════════════════════════════ */}
+        {/* SMART COACHING PANEL */}
         {hasRecordings && catMeta && (
           <div className={styles.coachPanel}>
-            {/* Header — always visible */}
             <div className={styles.coachPanelHeader} onClick={() => setCoachExpanded(!coachExpanded)}>
               <div className={styles.coachPanelLeft}>
                 <span className={styles.coachPanelIcon}>🎓</span>
@@ -337,17 +443,14 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Expandable body */}
             {coachExpanded && (
               <div className={styles.coachPanelBody}>
-
-                {/* Score bars — weakness highlight */}
                 <div className={styles.coachScoreBars}>
                   {[
-                    { label: 'Strong Endings', score: progress?.latest_ending  || 0, key: 'strong_endings', color: 'var(--gold)' },
-                    { label: 'Pause Control',  score: progress?.latest_pause   || 0, key: 'pause_control',  color: 'var(--teal)' },
-                    { label: 'Pace Control',   score: progress?.latest_pace    || 0, key: 'pace_control',   color: 'var(--green)' },
-                    { label: 'Pitch Variety',  score: progress?.latest_pitch   || 0, key: 'pitch_movement', color: 'var(--purple)' },
+                    { label: 'Strong Endings', score: progress?.latest_ending || 0, key: 'strong_endings', color: 'var(--gold)' },
+                    { label: 'Pause Control',  score: progress?.latest_pause  || 0, key: 'pause_control',  color: 'var(--teal)' },
+                    { label: 'Pace Control',   score: progress?.latest_pace   || 0, key: 'pace_control',   color: 'var(--green)' },
+                    { label: 'Pitch Variety',  score: progress?.latest_pitch  || 0, key: 'pitch_movement', color: 'var(--purple)' },
                   ].map((item, i) => (
                     <div key={i} className={`${styles.coachBarRow} ${item.key === weakestCategory ? styles.coachBarRowWeak : ''}`}>
                       <span className={styles.coachBarLabel}>
@@ -362,16 +465,10 @@ export default function Dashboard() {
                   ))}
                 </div>
 
-                {/* Recommended Exercise */}
                 <div className={styles.coachSection}>
-                  <p className={styles.coachSectionLabel}>
-                    <span>📌</span> Recommended Exercise
-                  </p>
+                  <p className={styles.coachSectionLabel}><span>📌</span> Recommended Exercise</p>
                   {loadingExercise ? (
-                    <div className={styles.coachLoading}>
-                      <div className={styles.spinnerSmall}></div>
-                      <span>Loading exercise...</span>
-                    </div>
+                    <div className={styles.coachLoading}><div className={styles.spinnerSmall}></div><span>Loading exercise...</span></div>
                   ) : recommendedExercise ? (
                     <div className={styles.coachExerciseCard}>
                       <div className={styles.coachExerciseTop}>
@@ -394,7 +491,6 @@ export default function Dashboard() {
 
                       {showExercise && (
                         <div className={styles.coachExerciseExpanded}>
-                          {/* Wrong / Correct audio */}
                           {(recommendedExercise.wrong_audio_url || recommendedExercise.correct_audio_url) && (
                             <div className={styles.audioExamples}>
                               {recommendedExercise.wrong_audio_url && (
@@ -417,24 +513,17 @@ export default function Dashboard() {
                               )}
                             </div>
                           )}
-
-                          {/* Practice template */}
                           <div className={styles.templateBox}>
                             <p className={styles.templateLabel}>Practice Template</p>
                             <p className={styles.templateText}>"{recommendedExercise.practice_template}"</p>
                           </div>
-
-                          {/* AI Sentences */}
                           <div className={styles.sentencesBox}>
                             <p className={styles.sentencesLabel}>
-                              AI Practice Sentences
-                              <span className={styles.aiTag}>GPT-4</span>
+                              Voice Control AI Practice Sentences
+                              <span className={styles.aiTag}>AI</span>
                             </p>
                             {loadingSentences ? (
-                              <div className={styles.coachLoading}>
-                                <div className={styles.spinnerSmall}></div>
-                                <span>Generating sentences...</span>
-                              </div>
+                              <div className={styles.coachLoading}><div className={styles.spinnerSmall}></div><span>Generating sentences...</span></div>
                             ) : (
                               <div className={styles.sentencesList}>
                                 {exerciseSentences.map((s, i) => (
@@ -446,7 +535,6 @@ export default function Dashboard() {
                               </div>
                             )}
                           </div>
-
                           <div className={styles.practiceNote}>
                             <span>🎯</span>
                             <p>Repeat each sentence 5 times. Record yourself and compare.</p>
@@ -457,34 +545,23 @@ export default function Dashboard() {
                   ) : null}
                 </div>
 
-                {/* All Exercises link */}
-                <button
-                  className={styles.coachLinkBtn}
-                  onClick={() => {
-                    const latestReport = recordings.find(r => r.report)?.report;
-                    router.push(latestReport ? `/exercises?report_id=${latestReport.id}` : '/exercises');
-                  }}
-                >
+                <button className={styles.coachLinkBtn} onClick={() => {
+                  const latestReport = recordings.find(r => r.report)?.report;
+                  router.push(latestReport ? `/exercises?report_id=${latestReport.id}` : '/exercises');
+                }}>
                   View All Recommended Exercises →
                 </button>
 
-                {/* Recommended Program */}
                 {progRec && (
                   <div className={styles.coachSection}>
-                    <p className={styles.coachSectionLabel}>
-                      <span>🏆</span> Recommended Program
-                    </p>
+                    <p className={styles.coachSectionLabel}><span>🏆</span> Recommended Program</p>
                     <div className={styles.coachProgramCard}>
                       <div>
                         <p className={styles.coachProgramName}>{progRec.program}</p>
                         <p className={styles.coachProgramDesc}>30 days · {progRec.reason}</p>
                       </div>
                       {!programAssigned && !progress?.active_program ? (
-                        <button
-                          className={styles.coachStartBtn}
-                          onClick={assignRecommendedProgram}
-                          disabled={assigningProgram}
-                        >
+                        <button className={styles.coachStartBtn} onClick={assignRecommendedProgram} disabled={assigningProgram}>
                           {assigningProgram ? 'Starting...' : 'Start Program'}
                         </button>
                       ) : programAssigned ? (
@@ -496,12 +573,10 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                {/* Next recording reminder */}
                 <div className={styles.coachNextStep}>
                   <span>📅</span>
-                  <p>Record again in 7 days to track your improvement. Your next recommended recording date is shown on your progress chart.</p>
+                  <p>Record again in 7 days to track your improvement and update your scores.</p>
                 </div>
-
               </div>
             )}
           </div>
@@ -513,18 +588,14 @@ export default function Dashboard() {
             <div className={styles.targetLeft}>
               <p className={styles.eyebrow}>Current Target</p>
               <div className={styles.targetScores}>
-                <span className={styles.targetCurrent} style={{ color: 'var(--gold)' }}>
-                  {progress.latest_authority}
-                </span>
+                <span className={styles.targetCurrent} style={{ color: 'var(--gold)' }}>{progress.latest_authority}</span>
                 <span className={styles.targetArrow}>→</span>
                 <span className={styles.targetGoal}>{progress.target_score}</span>
               </div>
               <p className={styles.targetLevel}>{progress.user_level}</p>
             </div>
             <div className={styles.targetRight}>
-              <div className={styles.targetPercent} style={{ color: 'var(--green)' }}>
-                {progress.progress_to_target}%
-              </div>
+              <div className={styles.targetPercent} style={{ color: 'var(--green)' }}>{progress.progress_to_target}%</div>
               <p className={styles.targetPercentLabel}>to target</p>
               <div className={styles.targetTrack}>
                 <div className={styles.targetFill} style={{ width: `${progress.progress_to_target}%` }} />
@@ -533,30 +604,55 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* CHARTS */}
-        {progress?.chart_data?.length > 1 && (
+        {/* PROGRESS CHART WITH TIME FILTER */}
+        {chartData?.length > 1 && (
           <div className={styles.chartCard}>
             <div className={styles.chartHeader}>
               <div>
                 <p className={styles.eyebrow}>Score History</p>
                 <h2 className={styles.chartTitle}>Progress Over Time</h2>
               </div>
-              <div className={styles.chartTabs}>
-                {Object.entries(CHART_LINES).map(([key, val]) => (
-                  <button
-                    key={key}
-                    className={`${styles.chartTab} ${activeChart === key ? styles.chartTabActive : ''}`}
-                    style={activeChart === key ? { borderColor: val.color, color: val.color } : {}}
-                    onClick={() => setActiveChart(key)}
-                  >
-                    {val.label}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                {/* Time filter */}
+                <div className={styles.chartTabs}>
+                  {[
+                    { label: '7 Days', value: 7 },
+                    { label: '30 Days', value: 30 },
+                    { label: 'All Time', value: 0 },
+                  ].map(opt => (
+                    <button
+                      key={opt.value}
+                      className={`${styles.chartTab} ${chartDays === opt.value ? styles.chartTabActive : ''}`}
+                      style={chartDays === opt.value ? { borderColor: 'var(--gold)', color: 'var(--gold)' } : {}}
+                      onClick={() => {
+                        setChartDays(opt.value);
+                        const token = localStorage.getItem('token');
+                        const u = JSON.parse(localStorage.getItem('user'));
+                        fetchChartData(token, u.id, opt.value);
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                {/* Score type filter */}
+                <div className={styles.chartTabs}>
+                  {Object.entries(CHART_LINES).map(([key, val]) => (
+                    <button
+                      key={key}
+                      className={`${styles.chartTab} ${activeChart === key ? styles.chartTabActive : ''}`}
+                      style={activeChart === key ? { borderColor: val.color, color: val.color } : {}}
+                      onClick={() => setActiveChart(key)}
+                    >
+                      {val.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
             <div className={styles.chartWrap}>
               <ResponsiveContainer width="100%" height={260}>
-                <LineChart data={progress.chart_data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+                <LineChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                   <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis domain={[0, 100]} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -619,9 +715,7 @@ export default function Dashboard() {
               <button className={styles.btnPrimary} onClick={() => markDayComplete(progress.active_program.user_program_id)}>
                 ✓ Complete Day {progress.active_program.current_day}
               </button>
-              <button className={styles.btnGhost} onClick={() => router.push('/exercises')}>
-                Today's Exercise
-              </button>
+              <button className={styles.btnGhost} onClick={() => router.push('/exercises')}>Today's Exercise</button>
             </div>
           </div>
         )}
@@ -631,9 +725,7 @@ export default function Dashboard() {
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Your Recordings</h2>
             {recordings.length > 0 && (
-              <button className={styles.btnGhost} onClick={() => router.push('/record')}>
-                + New Recording
-              </button>
+              <button className={styles.btnGhost} onClick={() => router.push('/record')}>+ New Recording</button>
             )}
           </div>
 
@@ -641,9 +733,7 @@ export default function Dashboard() {
             <div className={styles.emptyState}>
               <span>🎙️</span>
               <p>No recordings yet</p>
-              <button className={styles.btnPrimary} onClick={() => router.push('/record')}>
-                Record your first assessment
-              </button>
+              <button className={styles.btnPrimary} onClick={() => router.push('/record')}>Record your first assessment</button>
             </div>
           ) : (
             <div className={styles.recordingsList}>
@@ -668,11 +758,8 @@ export default function Dashboard() {
                   <div className={styles.recordingRight}>
                     <audio controls src={rec.audio_url} className={styles.audioPlayer} />
                     {rec.report && (
-                      <button
-                        className={styles.btnGhost}
-                        style={{ fontSize: '12px', padding: '5px 12px' }}
-                        onClick={() => router.push(`/exercises?report_id=${rec.report.id}`)}
-                      >
+                      <button className={styles.btnGhost} style={{ fontSize: '12px', padding: '5px 12px' }}
+                        onClick={() => router.push(`/exercises?report_id=${rec.report.id}`)}>
                         View Exercises
                       </button>
                     )}

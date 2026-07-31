@@ -32,11 +32,7 @@ function getWeakestCategory(reportData) {
 
 function buildPitchChartData(pitchValues) {
   if (!pitchValues || pitchValues.length === 0) return [];
-  return pitchValues.map((hz, i) => ({
-    t: i,
-    hz: hz,
-    label: `${(i * 0.1).toFixed(1)}s`,
-  }));
+  return pitchValues.map((hz, i) => ({ t: i, hz, label: `${(i * 0.1).toFixed(1)}s` }));
 }
 
 function buildWaveformData(pitchValues) {
@@ -52,7 +48,7 @@ function buildPauseMarkers(pauseDurations, totalDuration) {
   if (!pauseDurations || pauseDurations.length === 0) return [];
   return pauseDurations.map((duration, i) => ({
     position: Math.round(((i + 1) / (pauseDurations.length + 1)) * (totalDuration * 10)),
-    duration: duration,
+    duration,
   }));
 }
 
@@ -93,6 +89,10 @@ export default function Record() {
   const [programAssigned, setProgramAssigned] = useState(false);
   const [weakestCategory, setWeakestCategory] = useState(null);
 
+  // Challenge mode
+  const [challengeId, setChallengeId] = useState(null);
+  const [challengePrompt, setChallengePrompt] = useState(null);
+
   const mediaRef = useRef(null);
   const chunksRef = useRef([]);
   const timerRef = useRef(null);
@@ -103,6 +103,16 @@ export default function Record() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) router.push('/login');
+
+    // Challenge mode — check URL params
+    const params = new URLSearchParams(window.location.search);
+    const cId = params.get('challenge_id');
+    const cPrompt = params.get('prompt');
+    if (cId) {
+      setChallengeId(parseInt(cId));
+      setChallengePrompt(decodeURIComponent(cPrompt || ''));
+    }
+
     return () => {
       clearInterval(timerRef.current);
       cancelAnimationFrame(animRef.current);
@@ -160,12 +170,22 @@ export default function Record() {
       const match = programs.find(p => p.title === progName);
       if (!match) return;
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/programs/assign/${match.id}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
+        method: 'POST', headers: { Authorization: `Bearer ${token}` }
       });
       setProgramAssigned(true);
     } catch (err) { console.error(err); }
     finally { setAssigningProgram(false); }
+  }
+
+  async function completeChallenge() {
+    if (!challengeId) return;
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/challenges/complete/${challengeId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) { console.error(err); }
   }
 
   async function startRecording() {
@@ -241,6 +261,7 @@ export default function Record() {
       if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Upload failed');
       setRecordingId(data.id); setPhase('transcribing'); setTranscribing(true);
       startPolling(data.id, token);
+      await completeChallenge();
     } catch (err) { setError(err.message); }
     finally { setUploading(false); }
   }
@@ -263,6 +284,7 @@ export default function Record() {
       if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Upload failed');
       setRecordingId(data.id); setPhase('transcribing'); setTranscribing(true);
       startPolling(data.id, token);
+      await completeChallenge();
     } catch (err) { setError(err.message); }
     finally { setUploading(false); }
   }
@@ -292,6 +314,7 @@ export default function Record() {
     setShowUpgrade(false); setError(''); setCoachStep(0);
     setRecommendedExercise(null); setExerciseSentences([]);
     setProgramAssigned(false); setWeakestCategory(null);
+    setChallengeId(null); setChallengePrompt(null);
     clearInterval(pollRef.current);
   }
 
@@ -305,7 +328,7 @@ export default function Record() {
   return (
     <div className={styles.page}>
 
-      {/* FIXED UPGRADE TOAST — always visible */}
+      {/* FIXED UPGRADE TOAST */}
       {showUpgrade && (
         <div className={styles.fixedToastOverlay}>
           <div className={styles.fixedToast}>
@@ -317,9 +340,7 @@ export default function Record() {
               </div>
             </div>
             <div className={styles.fixedToastActions}>
-              <button className={styles.fixedToastBtn} onClick={() => router.push('/pricing')}>
-                Upgrade to Pro
-              </button>
+              <button className={styles.fixedToastBtn} onClick={() => router.push('/pricing')}>Upgrade to Pro</button>
               <button className={styles.fixedToastClose} onClick={() => setShowUpgrade(false)}>✕</button>
             </div>
           </div>
@@ -337,7 +358,9 @@ export default function Record() {
             <span className={styles.logoText}>Voice<span>Control</span> AI</span>
           </div>
           <div className={styles.navRight}>
-            <span className={styles.pill}>Voice Assessment</span>
+            <span className={styles.pill}>
+              {challengeId ? "Today's Challenge" : "Voice Assessment"}
+            </span>
             <button className={styles.btnGhost} onClick={() => router.push('/dashboard')}>Dashboard</button>
           </div>
         </div>
@@ -345,11 +368,20 @@ export default function Record() {
 
       <main className={styles.main}>
 
+        {/* PROMPT */}
         <div className={styles.promptCard}>
-          <p className={styles.eyebrow}>Recording Prompt</p>
-          <p className={styles.promptText}>"Introduce yourself and describe your work."</p>
+          <p className={styles.eyebrow}>
+            {challengeId ? "Today's Voice Challenge" : "Recording Prompt"}
+          </p>
+          <p className={styles.promptText}>
+            "{challengePrompt || 'Introduce yourself and describe your work.'}"
+          </p>
+          {challengeId && (
+            <span className={styles.challengeXpBadge}>+20 XP on completion</span>
+          )}
         </div>
 
+        {/* UPLOAD OPTION */}
         {phase === 'idle' && (
           <div className={styles.uploadCard}>
             <p className={styles.uploadLabel}>
@@ -370,6 +402,7 @@ export default function Record() {
 
         {error && <div className={styles.errorBox}>{error}</div>}
 
+        {/* RECORDER */}
         <div className={styles.recorderCard}>
           <div className={styles.timer}>
             <span className={styles.timerText}>{fmt(seconds)}</span>
@@ -402,18 +435,21 @@ export default function Record() {
               )}
             </button>
           </div>
+
           <div className={styles.waveform}>
             {bars.map((h, i) => (
               <span key={i} style={{ height: `${h}px` }} className={phase === 'recording' ? styles.barActive : styles.bar} />
             ))}
           </div>
+
           <p className={styles.statusText}>
             {phase === 'idle' && 'Tap the microphone to begin your 60-second assessment'}
             {phase === 'recording' && '🔴 Recording — tap stop when finished'}
             {phase === 'recorded' && 'Recording complete — review and submit'}
-            {phase === 'transcribing' && '⏳ Analyzing your audio...'}
+            {phase === 'transcribing' && '⏳ Voice Control AI is analyzing your voice...'}
             {phase === 'done' && '✅ Analysis complete'}
           </p>
+
           {(phase === 'recorded' || phase === 'transcribing' || phase === 'done') && audioUrl && (
             <div className={styles.playbackSection}>
               <p className={styles.playbackLabel}>Your Recording</p>
@@ -428,6 +464,7 @@ export default function Record() {
               )}
             </div>
           )}
+
           {phase === 'transcribing' && (
             <div className={styles.transcribingBox}>
               <div className={styles.spinner}></div>
@@ -436,16 +473,16 @@ export default function Record() {
           )}
         </div>
 
-        {/* ═══ PRAAT-STYLE ACOUSTIC VISUALIZATION ═══ */}
+        {/* PRAAT ACOUSTIC VISUALIZATION */}
         {phase === 'done' && analysisData && pitchChartData.length > 0 && (
           <div className={styles.praatPanel}>
             <div className={styles.praatHeader}>
               <p className={styles.eyebrow}>Acoustic Analysis</p>
               <h2 className={styles.praatTitle}>Voice Signal Visualization</h2>
-              <p className={styles.praatSub}>Praat-powered — waveform, pitch curve, pause segments</p>
+              <p className={styles.praatSub}>Waveform, pitch curve, and pause segments</p>
             </div>
 
-            {/* ROW 1 — WAVEFORM */}
+            {/* WAVEFORM */}
             <div className={styles.praatSection}>
               <div className={styles.praatSectionHeader}>
                 <span className={styles.praatSectionDot} style={{ background: '#2DD4BF' }}></span>
@@ -473,7 +510,7 @@ export default function Record() {
               </div>
             </div>
 
-            {/* ROW 2 — PITCH CURVE */}
+            {/* PITCH CURVE */}
             <div className={styles.praatSection}>
               <div className={styles.praatSectionHeader}>
                 <span className={styles.praatSectionDot} style={{ background: '#C9A84C' }}></span>
@@ -513,14 +550,12 @@ export default function Record() {
               </div>
             </div>
 
-            {/* ROW 3 — PAUSE SEGMENTS (TextGrid style) */}
+            {/* PAUSE SEGMENTS */}
             <div className={styles.praatSection}>
               <div className={styles.praatSectionHeader}>
                 <span className={styles.praatSectionDot} style={{ background: '#F87171' }}></span>
                 <span className={styles.praatSectionLabel}>Pause Segments</span>
-                <span className={styles.praatSectionInfo}>
-                  {analysisData.pause_count} pauses · avg {analysisData.avg_pause_duration}s
-                </span>
+                <span className={styles.praatSectionInfo}>{analysisData.pause_count} pauses · avg {analysisData.avg_pause_duration}s</span>
               </div>
               <div className={styles.praatTextGrid}>
                 <div className={styles.praatTimeline}>
@@ -572,7 +607,7 @@ export default function Record() {
               </div>
             </div>
 
-            {/* ROW 4 — SPEAKING RATE */}
+            {/* SPEAKING RATE */}
             <div className={styles.praatSection}>
               <div className={styles.praatSectionHeader}>
                 <span className={styles.praatSectionDot} style={{ background: '#4ADE80' }}></span>
@@ -610,7 +645,7 @@ export default function Record() {
               </div>
             </div>
 
-            {/* ROW 5 — FILLER WORDS */}
+            {/* FILLER WORDS */}
             {analysisData.filler_words && Object.keys(analysisData.filler_words).length > 0 && (
               <div className={styles.praatSection}>
                 <div className={styles.praatSectionHeader}>
@@ -721,9 +756,12 @@ export default function Record() {
                   <p className={styles.templateText}>"{recommendedExercise.practice_template}"</p>
                 </div>
                 <div className={styles.sentencesBox}>
-                  <p className={styles.sentencesLabel}>Voice Control AI Practice Sentences<span className={styles.aiTag}>AI</span></p>
+                  <p className={styles.sentencesLabel}>
+                    Voice Control AI Practice Sentences
+                    <span className={styles.aiTag}>AI</span>
+                  </p>
                   {loadingSentences ? (
-                    <div className={styles.sentencesLoading}><div className={styles.spinnerSmall}></div><span>Generating...</span></div>
+                    <div className={styles.sentencesLoading}><div className={styles.spinnerSmall}></div><span>Generating practice sentences...</span></div>
                   ) : (
                     <div className={styles.sentencesList}>
                       {exerciseSentences.map((s, i) => (
@@ -739,7 +777,7 @@ export default function Record() {
                 {coachStep === 2 && (
                   <div className={styles.coachActions} style={{ marginTop: '20px' }}>
                     <button className={styles.btnPrimaryCoach} onClick={() => setCoachStep(3)}>Exercise Done — Next Step →</button>
-                    <button className={styles.btnGhostCoach} onClick={() => router.push(`/exercises?report_id=${reportData.id}`)}>See All Recommended Exercises</button>
+                    <button className={styles.btnGhostCoach} onClick={() => router.push(`/exercises?report_id=${reportData?.id}`)}>See All Recommended Exercises</button>
                   </div>
                 )}
               </>
