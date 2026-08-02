@@ -93,6 +93,10 @@ export default function Record() {
   const [challengeId, setChallengeId] = useState(null);
   const [challengePrompt, setChallengePrompt] = useState(null);
 
+  // Phase 2B — Personal Bests
+  const [newPersonalBests, setNewPersonalBests] = useState([]);
+  const [showCelebration, setShowCelebration] = useState(false);
+
   const mediaRef = useRef(null);
   const chunksRef = useRef([]);
   const timerRef = useRef(null);
@@ -299,7 +303,15 @@ export default function Record() {
         if (data.transcript) {
           setTranscript(data.transcript);
           if (data.acoustic_data) setAnalysisData(data.acoustic_data);
-          if (data.report) setReportData(data.report);
+          if (data.report) {
+            setReportData(data.report);
+            // Check personal bests
+            const pbs = data.report.feedback?.personal_bests;
+            if (pbs && pbs.length > 0) {
+              setNewPersonalBests(pbs);
+              setShowCelebration(true);
+            }
+          }
           setTranscribing(false); setPhase('done');
           clearInterval(pollRef.current);
         }
@@ -315,6 +327,7 @@ export default function Record() {
     setRecommendedExercise(null); setExerciseSentences([]);
     setProgramAssigned(false); setWeakestCategory(null);
     setChallengeId(null); setChallengePrompt(null);
+    setNewPersonalBests([]); setShowCelebration(false);
     clearInterval(pollRef.current);
   }
 
@@ -472,6 +485,28 @@ export default function Record() {
             </div>
           )}
         </div>
+
+        {/* PERSONAL BEST CELEBRATION */}
+        {showCelebration && newPersonalBests.length > 0 && (
+          <div className={styles.celebrationBanner}>
+            <button className={styles.celebrationClose} onClick={() => setShowCelebration(false)}>✕</button>
+            <p className={styles.celebrationTitle}>🏆 New Personal Best{newPersonalBests.length > 1 ? 's' : ''}!</p>
+            <div className={styles.celebrationBests}>
+              {newPersonalBests.map((pb, i) => (
+                <div key={i} className={styles.celebrationItem}>
+                  <span className={styles.celebrationMetric}>{pb.metric.charAt(0).toUpperCase() + pb.metric.slice(1)}</span>
+                  <span className={styles.celebrationScore}>{pb.new_score}</span>
+                  {pb.previous_best ? (
+                    <span className={styles.celebrationImprove}>+{pb.improvement} from {Math.round(pb.previous_best)}</span>
+                  ) : (
+                    <span className={styles.celebrationImprove}>First score!</span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className={styles.celebrationXp}>+{25 + newPersonalBests.length * 10} XP earned 🎉</p>
+          </div>
+        )}
 
         {/* PRAAT ACOUSTIC VISUALIZATION */}
         {phase === 'done' && analysisData && pitchChartData.length > 0 && (

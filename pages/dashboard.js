@@ -64,6 +64,10 @@ export default function Dashboard() {
   const [streak, setStreak] = useState(null);
   const [xpData, setXpData] = useState(null);
 
+  // Phase 2B
+  const [comparison, setComparison] = useState(null);
+  const [personalBests, setPersonalBests] = useState([]);
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) { router.push('/login'); return; }
@@ -87,6 +91,8 @@ export default function Dashboard() {
       fetchStreak(token),
       fetchXP(token),
       fetchChartData(token, u.id, 30),
+      fetchComparison(token, u.id),
+      fetchPersonalBests(token, u.id),
     ]).finally(() => setLoading(false));
   }, [router.query]);
 
@@ -99,19 +105,14 @@ export default function Dashboard() {
       if (res.ok) {
         setProgress(data);
         const weakCat = getWeakestCategory(data);
-        if (weakCat) {
-          setWeakestCategory(weakCat);
-          fetchRecommendedExercise(weakCat, token);
-        }
+        if (weakCat) { setWeakestCategory(weakCat); fetchRecommendedExercise(weakCat, token); }
       }
     } catch (err) { console.error(err); }
   }
 
   async function fetchRecordings(token) {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/audio/my-recordings`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/audio/my-recordings`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (res.ok) setRecordings(data);
     } catch (err) { console.error(err); }
@@ -119,9 +120,7 @@ export default function Dashboard() {
 
   async function fetchTodayChallenge(token) {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/challenges/today`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/challenges/today`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (res.ok) setTodayChallenge(data);
     } catch (err) { console.error(err); }
@@ -129,9 +128,7 @@ export default function Dashboard() {
 
   async function fetchStreak(token) {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/challenges/streak`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/challenges/streak`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (res.ok) setStreak(data);
     } catch (err) { console.error(err); }
@@ -139,9 +136,7 @@ export default function Dashboard() {
 
   async function fetchXP(token) {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/challenges/xp`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/challenges/xp`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (res.ok) setXpData(data);
     } catch (err) { console.error(err); }
@@ -149,12 +144,25 @@ export default function Dashboard() {
 
   async function fetchChartData(token, userId, days) {
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/progress/chart/${userId}?days=${days}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/progress/chart/${userId}?days=${days}`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (res.ok) setChartData(data.chart_data || []);
+    } catch (err) { console.error(err); }
+  }
+
+  async function fetchComparison(token, userId) {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reports/comparison/${userId}`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (res.ok && data.has_comparison) setComparison(data);
+    } catch (err) { console.error(err); }
+  }
+
+  async function fetchPersonalBests(token, userId) {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reports/personal-bests/${userId}`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (res.ok) setPersonalBests(data);
     } catch (err) { console.error(err); }
   }
 
@@ -162,10 +170,7 @@ export default function Dashboard() {
     setLoadingExercise(true);
     try {
       const t = token || localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/exercises/all?category=${category}`,
-        { headers: { Authorization: `Bearer ${t}` } }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/exercises/all?category=${category}`, { headers: { Authorization: `Bearer ${t}` } });
       const data = await res.json();
       if (res.ok && data.length > 0) setRecommendedExercise(data[0]);
     } catch (err) { console.error(err); }
@@ -176,10 +181,7 @@ export default function Dashboard() {
     setLoadingSentences(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/exercises/practice-sentences/${exerciseId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/exercises/practice-sentences/${exerciseId}`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (res.ok) setExerciseSentences(data.sentences);
     } catch (err) { console.error(err); }
@@ -192,15 +194,11 @@ export default function Dashboard() {
     if (!progName) return;
     setAssigningProgram(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/programs/all`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/programs/all`, { headers: { Authorization: `Bearer ${token}` } });
       const programs = await res.json();
       const match = programs.find(p => p.title === progName);
       if (!match) return;
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/programs/assign/${match.id}`, {
-        method: 'POST', headers: { Authorization: `Bearer ${token}` }
-      });
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/programs/assign/${match.id}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
       setProgramAssigned(true);
       fetchProgress(token, JSON.parse(localStorage.getItem('user')).id);
     } catch (err) { console.error(err); }
@@ -210,9 +208,7 @@ export default function Dashboard() {
   async function markDayComplete(userProgramId) {
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/programs/progress/${userProgramId}`, {
-        method: 'POST', headers: { Authorization: `Bearer ${token}` }
-      });
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/programs/progress/${userProgramId}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
       fetchProgress(token, JSON.parse(localStorage.getItem('user')).id);
     } catch (err) { console.error(err); }
   }
@@ -234,9 +230,7 @@ export default function Dashboard() {
         <div className={styles.tooltip}>
           <p className={styles.tooltipLabel}>{label}</p>
           {payload.map((p, i) => (
-            <p key={i} style={{ color: p.color, margin: '2px 0', fontSize: '13px' }}>
-              {p.name}: <strong>{p.value}</strong>
-            </p>
+            <p key={i} style={{ color: p.color, margin: '2px 0', fontSize: '13px' }}>{p.name}: <strong>{p.value}</strong></p>
           ))}
         </div>
       );
@@ -288,9 +282,7 @@ export default function Dashboard() {
           <div>
             <p className={styles.eyebrow}>Dashboard</p>
             <h1 className={styles.heading}>Welcome back, {user?.name?.split(' ')[0]} 👋</h1>
-            <p className={styles.sub}>
-              {progress?.user_level || 'Beginner Speaker'} — {progress?.total_recordings || 0} recording{progress?.total_recordings !== 1 ? 's' : ''} submitted
-            </p>
+            <p className={styles.sub}>{progress?.user_level || 'Beginner Speaker'} — {progress?.total_recordings || 0} recording{progress?.total_recordings !== 1 ? 's' : ''} submitted</p>
           </div>
           <button className={styles.btnPrimary} onClick={() => router.push('/record')}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -307,10 +299,7 @@ export default function Dashboard() {
             <div className={styles.xpHeader}>
               <div>
                 <p className={styles.xpLevel}>Level {xpData.level} — {xpData.name}</p>
-                <p className={styles.xpPoints}>
-                  {xpData.xp} XP
-                  {xpData.next_level && ` · ${xpData.next_xp - xpData.xp} XP to ${xpData.next_level}`}
-                </p>
+                <p className={styles.xpPoints}>{xpData.xp} XP{xpData.next_level && ` · ${xpData.next_xp - xpData.xp} XP to ${xpData.next_level}`}</p>
               </div>
               <span className={styles.xpBadge}>⭐ {xpData.xp} XP</span>
             </div>
@@ -328,18 +317,14 @@ export default function Dashboard() {
                 <p className={styles.eyebrow}>Today's Voice Challenge</p>
                 <p className={styles.challengePrompt}>"{todayChallenge.prompt}"</p>
               </div>
-              {todayChallenge.completed && (
-                <span className={styles.challengeDone}>✅ Done</span>
-              )}
+              {todayChallenge.completed && <span className={styles.challengeDone}>✅ Done</span>}
             </div>
             <div className={styles.challengeMeta}>
               <span className={styles.challengeMetaItem}>⏱ {todayChallenge.duration}</span>
               <span className={styles.challengeMetaItem}>+{todayChallenge.xp_reward} XP</span>
             </div>
             {!todayChallenge.completed && (
-              <button className={styles.btnPrimary} onClick={startChallenge}>
-                Start Challenge →
-              </button>
+              <button className={styles.btnPrimary} onClick={startChallenge}>Start Challenge →</button>
             )}
           </div>
         )}
@@ -350,22 +335,31 @@ export default function Dashboard() {
             <div className={styles.streakHeader}>
               <div>
                 <p className={styles.eyebrow}>Practice Streak</p>
-                <p className={styles.streakCount}>
-                  🔥 {streak.current_streak} Day{streak.current_streak !== 1 ? 's' : ''}
-                </p>
+                <p className={styles.streakCount}>🔥 {streak.current_streak} Day{streak.current_streak !== 1 ? 's' : ''}</p>
               </div>
               <p className={styles.streakTotal}>{streak.total_days} total practice days</p>
             </div>
             <div className={styles.weekCalendar}>
               {streak.weekly_calendar.map((day, i) => (
-                <div
-                  key={i}
-                  className={`${styles.calDay} ${day.completed ? styles.calDayDone : ''} ${day.is_today ? styles.calDayToday : ''}`}
-                >
+                <div key={i} className={`${styles.calDay} ${day.completed ? styles.calDayDone : ''} ${day.is_today ? styles.calDayToday : ''}`}>
                   <span className={styles.calDayName}>{day.day}</span>
-                  <span className={styles.calDayIcon}>
-                    {day.completed ? '✓' : day.is_today ? '·' : '—'}
-                  </span>
+                  <span className={styles.calDayIcon}>{day.completed ? '✓' : day.is_today ? '·' : '—'}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* PERSONAL BESTS */}
+        {personalBests.length > 0 && (
+          <div className={styles.pbCard}>
+            <p className={styles.eyebrow}>Personal Bests 🏆</p>
+            <div className={styles.pbGrid}>
+              {personalBests.map((pb, i) => (
+                <div key={i} className={styles.pbItem}>
+                  <p className={styles.pbMetric}>{pb.metric.charAt(0).toUpperCase() + pb.metric.slice(1)}</p>
+                  <p className={styles.pbScore}>{pb.best_score}</p>
+                  <p className={styles.pbDate}>{pb.achieved_at}</p>
                 </div>
               ))}
             </div>
@@ -376,17 +370,10 @@ export default function Dashboard() {
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>
             <p className={styles.statLabel}>Plan</p>
-            <p className={styles.statValue} style={{
-              color: user?.plan === 'executive' ? 'var(--purple)' : user?.plan === 'pro' ? 'var(--gold)' : 'var(--text-muted)',
-              textTransform: 'capitalize', fontSize: '20px'
-            }}>
+            <p className={styles.statValue} style={{ color: user?.plan === 'executive' ? 'var(--purple)' : user?.plan === 'pro' ? 'var(--gold)' : 'var(--text-muted)', textTransform: 'capitalize', fontSize: '20px' }}>
               {user?.plan === 'executive' ? '⭐ Executive' : user?.plan === 'pro' ? '✨ Pro' : 'Free'}
             </p>
-            {user?.plan === 'free' && (
-              <p className={styles.statChange} style={{ color: 'var(--gold)', cursor: 'pointer' }} onClick={() => router.push('/pricing')}>
-                Upgrade →
-              </p>
-            )}
+            {user?.plan === 'free' && <p className={styles.statChange} style={{ color: 'var(--gold)', cursor: 'pointer' }} onClick={() => router.push('/pricing')}>Upgrade →</p>}
           </div>
           <div className={styles.statCard}>
             <p className={styles.statLabel}>Authority Score</p>
@@ -431,18 +418,13 @@ export default function Dashboard() {
                 <span className={styles.coachPanelIcon}>🎓</span>
                 <div>
                   <p className={styles.coachPanelTitle}>Your Coach Recommends</p>
-                  <p className={styles.coachPanelSub}>
-                    Focus on <strong style={{ color: catMeta.color }}>{catMeta.icon} {catMeta.label}</strong> — your weakest area right now
-                  </p>
+                  <p className={styles.coachPanelSub}>Focus on <strong style={{ color: catMeta.color }}>{catMeta.icon} {catMeta.label}</strong> — your weakest area right now</p>
                 </div>
               </div>
               <div className={styles.coachPanelToggle} style={{ transform: coachExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="6 9 12 15 18 9"/>
-                </svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
               </div>
             </div>
-
             {coachExpanded && (
               <div className={styles.coachPanelBody}>
                 <div className={styles.coachScoreBars}>
@@ -464,7 +446,6 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
-
                 <div className={styles.coachSection}>
                   <p className={styles.coachSectionLabel}><span>📌</span> Recommended Exercise</p>
                   {loadingExercise ? (
@@ -476,38 +457,23 @@ export default function Dashboard() {
                           <p className={styles.coachExerciseName}>{recommendedExercise.title}</p>
                           <p className={styles.coachExerciseDesc}>{recommendedExercise.instruction}</p>
                         </div>
-                        <button
-                          className={styles.coachExpandBtn}
-                          onClick={() => {
-                            setShowExercise(!showExercise);
-                            if (!showExercise && exerciseSentences.length === 0) {
-                              loadExerciseSentences(recommendedExercise.id);
-                            }
-                          }}
-                        >
+                        <button className={styles.coachExpandBtn} onClick={() => { setShowExercise(!showExercise); if (!showExercise && exerciseSentences.length === 0) loadExerciseSentences(recommendedExercise.id); }}>
                           {showExercise ? 'Hide' : 'Practice Now'}
                         </button>
                       </div>
-
                       {showExercise && (
                         <div className={styles.coachExerciseExpanded}>
                           {(recommendedExercise.wrong_audio_url || recommendedExercise.correct_audio_url) && (
                             <div className={styles.audioExamples}>
                               {recommendedExercise.wrong_audio_url && (
                                 <div className={styles.audioExample}>
-                                  <div className={styles.audioExampleHeader}>
-                                    <span className={styles.wrongDot}></span>
-                                    <p className={styles.audioExampleLabel}>Wrong Example</p>
-                                  </div>
+                                  <div className={styles.audioExampleHeader}><span className={styles.wrongDot}></span><p className={styles.audioExampleLabel}>Wrong Example</p></div>
                                   <audio controls src={recommendedExercise.wrong_audio_url} className={styles.audioExamplePlayer} preload="none" />
                                 </div>
                               )}
                               {recommendedExercise.correct_audio_url && (
                                 <div className={styles.audioExample}>
-                                  <div className={styles.audioExampleHeader}>
-                                    <span className={styles.correctDot}></span>
-                                    <p className={styles.audioExampleLabel}>Correct Example</p>
-                                  </div>
+                                  <div className={styles.audioExampleHeader}><span className={styles.correctDot}></span><p className={styles.audioExampleLabel}>Correct Example</p></div>
                                   <audio controls src={recommendedExercise.correct_audio_url} className={styles.audioExamplePlayer} preload="none" />
                                 </div>
                               )}
@@ -518,10 +484,7 @@ export default function Dashboard() {
                             <p className={styles.templateText}>"{recommendedExercise.practice_template}"</p>
                           </div>
                           <div className={styles.sentencesBox}>
-                            <p className={styles.sentencesLabel}>
-                              Voice Control AI Practice Sentences
-                              <span className={styles.aiTag}>AI</span>
-                            </p>
+                            <p className={styles.sentencesLabel}>Voice Control AI Practice Sentences<span className={styles.aiTag}>AI</span></p>
                             {loadingSentences ? (
                               <div className={styles.coachLoading}><div className={styles.spinnerSmall}></div><span>Generating sentences...</span></div>
                             ) : (
@@ -535,23 +498,15 @@ export default function Dashboard() {
                               </div>
                             )}
                           </div>
-                          <div className={styles.practiceNote}>
-                            <span>🎯</span>
-                            <p>Repeat each sentence 5 times. Record yourself and compare.</p>
-                          </div>
+                          <div className={styles.practiceNote}><span>🎯</span><p>Repeat each sentence 5 times. Record yourself and compare.</p></div>
                         </div>
                       )}
                     </div>
                   ) : null}
                 </div>
-
-                <button className={styles.coachLinkBtn} onClick={() => {
-                  const latestReport = recordings.find(r => r.report)?.report;
-                  router.push(latestReport ? `/exercises?report_id=${latestReport.id}` : '/exercises');
-                }}>
+                <button className={styles.coachLinkBtn} onClick={() => { const r = recordings.find(r => r.report)?.report; router.push(r ? `/exercises?report_id=${r.id}` : '/exercises'); }}>
                   View All Recommended Exercises →
                 </button>
-
                 {progRec && (
                   <div className={styles.coachSection}>
                     <p className={styles.coachSectionLabel}><span>🏆</span> Recommended Program</p>
@@ -572,7 +527,6 @@ export default function Dashboard() {
                     </div>
                   </div>
                 )}
-
                 <div className={styles.coachNextStep}>
                   <span>📅</span>
                   <p>Record again in 7 days to track your improvement and update your scores.</p>
@@ -604,7 +558,65 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* PROGRESS CHART WITH TIME FILTER */}
+        {/* BEFORE & AFTER COMPARISON */}
+        {comparison && (
+          <div className={styles.comparisonCard}>
+            <p className={styles.eyebrow}>Before & After</p>
+            <h2 className={styles.comparisonTitle}>Your Voice Journey</h2>
+            <div className={styles.comparisonGrid}>
+              <div className={styles.comparisonCol}>
+                <p className={styles.comparisonColLabel}>First Recording</p>
+                <p className={styles.comparisonColDate}>{comparison.first.date}</p>
+                <p className={styles.comparisonLevel}>{comparison.first.user_level}</p>
+                {[
+                  { label: 'Authority',  score: comparison.first.authority_score,  color: 'var(--gold)' },
+                  { label: 'Confidence', score: comparison.first.confidence_score, color: 'var(--teal)' },
+                  { label: 'Presence',   score: comparison.first.presence_score,   color: 'var(--purple)' },
+                  { label: 'Leadership', score: comparison.first.leadership_score, color: 'var(--green)' },
+                ].map((item, i) => (
+                  <div key={i} className={styles.comparisonRow}>
+                    <span className={styles.comparisonRowLabel}>{item.label}</span>
+                    <div className={styles.comparisonBarTrack}>
+                      <div className={styles.comparisonBarFill} style={{ width: `${item.score}%`, background: item.color, opacity: 0.5 }} />
+                    </div>
+                    <span className={styles.comparisonRowScore} style={{ color: item.color }}>{item.score}</span>
+                  </div>
+                ))}
+              </div>
+              <div className={styles.comparisonDivider}>
+                <div className={styles.comparisonArrow}>→</div>
+              </div>
+              <div className={styles.comparisonCol}>
+                <p className={styles.comparisonColLabel}>Latest Recording</p>
+                <p className={styles.comparisonColDate}>{comparison.latest.date}</p>
+                <p className={styles.comparisonLevel}>{comparison.latest.user_level}</p>
+                {[
+                  { label: 'Authority',  score: comparison.latest.authority_score,  imp: comparison.improvements.authority,  color: 'var(--gold)' },
+                  { label: 'Confidence', score: comparison.latest.confidence_score, imp: comparison.improvements.confidence, color: 'var(--teal)' },
+                  { label: 'Presence',   score: comparison.latest.presence_score,   imp: comparison.improvements.presence,   color: 'var(--purple)' },
+                  { label: 'Leadership', score: comparison.latest.leadership_score, imp: comparison.improvements.leadership, color: 'var(--green)' },
+                ].map((item, i) => (
+                  <div key={i} className={styles.comparisonRow}>
+                    <span className={styles.comparisonRowLabel}>{item.label}</span>
+                    <div className={styles.comparisonBarTrack}>
+                      <div className={styles.comparisonBarFill} style={{ width: `${item.score}%`, background: item.color }} />
+                    </div>
+                    <span className={styles.comparisonRowScore} style={{ color: item.color }}>
+                      {item.score}
+                      {item.imp !== 0 && (
+                        <span style={{ fontSize: '10px', marginLeft: '4px', color: item.imp > 0 ? 'var(--green)' : 'var(--red)' }}>
+                          {item.imp > 0 ? `+${item.imp}` : item.imp}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PROGRESS CHART */}
         {chartData?.length > 1 && (
           <div className={styles.chartCard}>
             <div className={styles.chartHeader}>
@@ -613,15 +625,9 @@ export default function Dashboard() {
                 <h2 className={styles.chartTitle}>Progress Over Time</h2>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
-                {/* Time filter */}
                 <div className={styles.chartTabs}>
-                  {[
-                    { label: '7 Days', value: 7 },
-                    { label: '30 Days', value: 30 },
-                    { label: 'All Time', value: 0 },
-                  ].map(opt => (
-                    <button
-                      key={opt.value}
+                  {[{ label: '7 Days', value: 7 }, { label: '30 Days', value: 30 }, { label: 'All Time', value: 0 }].map(opt => (
+                    <button key={opt.value}
                       className={`${styles.chartTab} ${chartDays === opt.value ? styles.chartTabActive : ''}`}
                       style={chartDays === opt.value ? { borderColor: 'var(--gold)', color: 'var(--gold)' } : {}}
                       onClick={() => {
@@ -629,21 +635,17 @@ export default function Dashboard() {
                         const token = localStorage.getItem('token');
                         const u = JSON.parse(localStorage.getItem('user'));
                         fetchChartData(token, u.id, opt.value);
-                      }}
-                    >
+                      }}>
                       {opt.label}
                     </button>
                   ))}
                 </div>
-                {/* Score type filter */}
                 <div className={styles.chartTabs}>
                   {Object.entries(CHART_LINES).map(([key, val]) => (
-                    <button
-                      key={key}
+                    <button key={key}
                       className={`${styles.chartTab} ${activeChart === key ? styles.chartTabActive : ''}`}
                       style={activeChart === key ? { borderColor: val.color, color: val.color } : {}}
-                      onClick={() => setActiveChart(key)}
-                    >
+                      onClick={() => setActiveChart(key)}>
                       {val.label}
                     </button>
                   ))}
@@ -657,15 +659,9 @@ export default function Dashboard() {
                   <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis domain={[0, 100]} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Line
-                    type="monotone"
-                    dataKey={CHART_LINES[activeChart].key}
-                    name={CHART_LINES[activeChart].label}
-                    stroke={CHART_LINES[activeChart].color}
-                    strokeWidth={2.5}
-                    dot={{ fill: CHART_LINES[activeChart].color, r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
+                  <Line type="monotone" dataKey={CHART_LINES[activeChart].key} name={CHART_LINES[activeChart].label}
+                    stroke={CHART_LINES[activeChart].color} strokeWidth={2.5}
+                    dot={{ fill: CHART_LINES[activeChart].color, r: 4 }} activeDot={{ r: 6 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -704,9 +700,7 @@ export default function Dashboard() {
             <div className={styles.programLeft}>
               <p className={styles.eyebrow}>Active Program</p>
               <h3 className={styles.programTitle}>{progress.active_program.title}</h3>
-              <p className={styles.programDay}>
-                Day <strong style={{ color: 'var(--gold)' }}>{progress.active_program.current_day}</strong> of {progress.active_program.duration_days}
-              </p>
+              <p className={styles.programDay}>Day <strong style={{ color: 'var(--gold)' }}>{progress.active_program.current_day}</strong> of {progress.active_program.duration_days}</p>
               <div className={styles.programTrack}>
                 <div className={styles.programFill} style={{ width: `${progress.active_program.progress_percent}%` }} />
               </div>
@@ -724,11 +718,8 @@ export default function Dashboard() {
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Your Recordings</h2>
-            {recordings.length > 0 && (
-              <button className={styles.btnGhost} onClick={() => router.push('/record')}>+ New Recording</button>
-            )}
+            {recordings.length > 0 && <button className={styles.btnGhost} onClick={() => router.push('/record')}>+ New Recording</button>}
           </div>
-
           {recordings.length === 0 ? (
             <div className={styles.emptyState}>
               <span>🎙️</span>
@@ -742,10 +733,7 @@ export default function Dashboard() {
                   <div className={styles.recordingLeft}>
                     <p className={styles.recordingTitle}>Recording #{recordings.length - i}</p>
                     <p className={styles.recordingDate}>
-                      {new Date(rec.created_at).toLocaleDateString('en-US', {
-                        month: 'short', day: 'numeric', year: 'numeric',
-                        hour: '2-digit', minute: '2-digit'
-                      })}
+                      {new Date(rec.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </p>
                     {rec.report && (
                       <div className={styles.recordingScores}>

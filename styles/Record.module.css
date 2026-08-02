@@ -910,3 +910,45 @@
   flex-shrink: 0;
 }
 .fixedToastClose:hover { border-color: rgba(255,255,255,0.2); color: var(--white); }
+/* ═══ PERSONAL BEST CELEBRATION ═══ */
+.celebrationBanner {
+  background: linear-gradient(135deg, rgba(201,168,76,0.15), var(--navy-2));
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: celebIn 0.4s ease;
+}
+@keyframes celebIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.celebrationClose {
+  position: absolute;
+  top: 14px; right: 14px;
+  background: transparent;
+  border: 1px solid var(--border-sub);
+  color: var(--text-muted);
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.celebrationTitle { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--gold-light); }
+.celebrationBests { display: flex; flex-direction: column; gap: 8px; }
+.celebrationItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.04);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+}
+.celebrationMetric { font-size: 13px; color: var(--text-dim); flex: 1; }
+.celebrationScore { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--gold); }
+.celebrationImprove { font-size: 12px; color: var(--green); }
+.celebrationXp { font-size: 14px; color: var(--green); font-weight: 600; }
