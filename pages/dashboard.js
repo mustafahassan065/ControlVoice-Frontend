@@ -267,6 +267,8 @@ export default function Dashboard() {
             <button className={styles.navLink} onClick={() => router.push('/exercises')}>Exercises</button>
             <button className={styles.navLink} onClick={() => router.push('/programs')}>Programs</button>
             <button className={styles.navLink} onClick={() => router.push('/pricing')}>Pricing</button>
+            <button className={styles.navLink} onClick={() => router.push('/coach')}>AI Coach</button>
+            <button className={styles.navLink} onClick={() => router.push('/settings')}>Settings</button>
           </div>
           <div className={styles.navRight}>
             {user && <span className={styles.userName}>{user.name}</span>}
