@@ -952,7 +952,7 @@
 .celebrationScore { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--gold); }
 .celebrationImprove { font-size: 12px; color: var(--green); }
 .celebrationXp { font-size: 14px; color: var(--green); font-weight: 600; }
-teacherBox {
+.teacherBox {
   border-radius: var(--radius-sm);
   padding: 14px 16px;
   display: flex;
