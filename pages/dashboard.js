@@ -345,6 +345,7 @@ export default function Dashboard() {
               {streak.weekly_calendar.map((day, i) => (
                 <div key={i} className={`${styles.calDay} ${day.completed ? styles.calDayDone : ''} ${day.is_today ? styles.calDayToday : ''}`}>
                   <span className={styles.calDayName}>{day.day}</span>
+                  <span className={styles.calDayDate}>{day.date.slice(5).replace('-', '/')}</span>
                   <span className={styles.calDayIcon}>{day.completed ? '✓' : day.is_today ? '·' : '—'}</span>
                 </div>
               ))}

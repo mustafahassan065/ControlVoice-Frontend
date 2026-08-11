@@ -952,3 +952,48 @@
 .celebrationScore { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--gold); }
 .celebrationImprove { font-size: 12px; color: var(--green); }
 .celebrationXp { font-size: 14px; color: var(--green); font-weight: 600; }
+teacherBox {
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+.teacherBoxGood {
+  background: rgba(74,222,128,0.06);
+  border: 1px solid rgba(74,222,128,0.2);
+}
+.teacherBoxWarning {
+  background: rgba(248,113,113,0.06);
+  border: 1px solid rgba(248,113,113,0.2);
+}
+.teacherBoxHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.teacherBoxIcon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+.teacherBoxText { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin: 0; }
+.teacherBoxTip {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding-left: 25px;
+}
+.teacherBoxTip span { color: var(--gold-light); font-weight: 600; }
+.teacherExerciseBtn {
+  background: transparent;
+  border: 1px solid var(--gold-border);
+  color: var(--gold-light);
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+  align-self: flex-start;
+  transition: all 0.2s;
+  margin-left: 25px;
+}
+.teacherExerciseBtn:hover { background: var(--gold-dim); }

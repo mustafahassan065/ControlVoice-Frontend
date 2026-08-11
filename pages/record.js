@@ -20,6 +20,14 @@ const CATEGORY_LABELS = {
   pace_control:   { label: 'Pace Control',   color: 'var(--green)',  icon: '🎯' },
 };
 
+// Exercise recommendations per category
+const EXERCISE_LINKS = {
+  pause_control:  { title: 'The Power Pause',        desc: 'Practice pausing 2 seconds before your key point.',   category: 'pause_control' },
+  strong_endings: { title: 'Drop Your Pitch',         desc: 'End every statement with a downward pitch.',           category: 'strong_endings' },
+  pitch_movement: { title: 'High-Low Contrast',       desc: 'Vary pitch between first and second half of sentence.',category: 'pitch_movement' },
+  pace_control:   { title: 'The 140 WPM Target',      desc: 'Record 60 seconds and count words — target 130-160.', category: 'pace_control' },
+};
+
 function getWeakestCategory(reportData) {
   const scores = {
     pause_control:  reportData?.pause_score  || 50,
@@ -52,6 +60,102 @@ function buildPauseMarkers(pauseDurations, totalDuration) {
   }));
 }
 
+// Teacher-style explanation per metric
+function getWaveformExplanation(analysisData) {
+  const energy = analysisData?.speaking_rate_wpm || 0;
+  if (energy > 160) return { status: 'warning', text: 'Your vocal energy is high but pace is fast. Slow down to let your voice carry more weight.', tip: 'Take a breath before each new idea.' };
+  if (energy < 100) return { status: 'warning', text: 'Your vocal energy seems low. Speak with more projection so your voice fills the room.', tip: 'Imagine speaking to someone 10 feet away.' };
+  return { status: 'good', text: 'Your vocal energy is balanced. Keep this steady projection throughout your speech.', tip: 'Maintain this energy in your next recording.' };
+}
+
+function getPitchExplanation(analysisData) {
+  if (!analysisData) return null;
+  if (analysisData.pitch_status === 'monotone') return {
+    status: 'warning',
+    text: `Your pitch range is ${analysisData.pitch_range_hz} Hz — this sounds flat and monotone to listeners. A good speaker uses at least 50-100 Hz variation.`,
+    tip: 'Raise your pitch on the most important word in each sentence.',
+    exercise: 'pitch_movement'
+  };
+  if (analysisData.pitch_status === 'good') return {
+    status: 'good',
+    text: `Your pitch range is ${analysisData.pitch_range_hz} Hz — this shows good vocal variety. Listeners find varied pitch engaging and credible.`,
+    tip: 'Continue using this natural variation. Focus on dropping pitch at sentence endings.',
+    exercise: null
+  };
+  return {
+    status: 'good',
+    text: `Your pitch range is ${analysisData.pitch_range_hz} Hz — very expressive. This keeps listeners engaged.`,
+    tip: 'Excellent vocal variety. Make sure endings still drop downward for authority.',
+    exercise: null
+  };
+}
+
+function getPauseExplanation(analysisData) {
+  if (!analysisData) return null;
+  if (analysisData.pause_status === 'no_pauses') return {
+    status: 'warning',
+    text: 'No meaningful pauses were detected. Speaking without pauses makes you sound nervous and rushed.',
+    tip: 'Stop completely for 1-2 seconds before your most important point.',
+    exercise: 'pause_control'
+  };
+  if (analysisData.pause_status === 'too_short') return {
+    status: 'warning',
+    text: `You paused ${analysisData.pause_count} times but average pause was only ${analysisData.avg_pause_duration}s — too short to create impact.`,
+    tip: 'Extend your pauses to 1.5-2 seconds. Count silently: "one... two..." before continuing.',
+    exercise: 'pause_control'
+  };
+  if (analysisData.pause_status === 'good') return {
+    status: 'good',
+    text: `You used ${analysisData.pause_count} pauses with an average of ${analysisData.avg_pause_duration}s — this is the professional range.`,
+    tip: 'Well done. Keep using pauses strategically before key ideas.',
+    exercise: null
+  };
+  return {
+    status: 'warning',
+    text: `Your pauses averaged ${analysisData.avg_pause_duration}s — slightly too long. This can make speech feel disconnected.`,
+    tip: 'Aim for 1-2 second pauses. Practice transitioning smoothly between ideas.',
+    exercise: 'pause_control'
+  };
+}
+
+function getWpmExplanation(analysisData) {
+  if (!analysisData) return null;
+  if (analysisData.wpm_status === 'optimal') return {
+    status: 'good',
+    text: `${analysisData.speaking_rate_wpm} WPM is perfect. This pace gives listeners time to process your words without losing interest.`,
+    tip: 'Maintain this pace. Slow down even more on your 3 most important points.',
+    exercise: null
+  };
+  if (analysisData.wpm_status === 'too_fast') return {
+    status: 'warning',
+    text: `${analysisData.speaking_rate_wpm} WPM is too fast. The recommended range is 130-160 WPM. At this speed, listeners miss key information.`,
+    tip: 'After every sentence, pause for one full second before continuing.',
+    exercise: 'pace_control'
+  };
+  return {
+    status: 'warning',
+    text: `${analysisData.speaking_rate_wpm} WPM is too slow. This can cause listeners to lose focus. Target 130-160 WPM.`,
+    tip: 'Practice reading aloud at a slightly faster pace. Use energy, not speed.',
+    exercise: 'pace_control'
+  };
+}
+
+function getFillerExplanation(analysisData) {
+  if (!analysisData || !analysisData.total_fillers) return null;
+  if (analysisData.filler_status === 'excellent') return {
+    status: 'good',
+    text: 'Excellent — very few filler words detected. This makes you sound confident and prepared.',
+    tip: 'Keep replacing filler words with deliberate pauses.',
+    exercise: null
+  };
+  return {
+    status: 'warning',
+    text: `${analysisData.total_fillers} filler words detected (${analysisData.filler_percent}% of your speech). Filler words signal uncertainty to listeners.`,
+    tip: 'Every time you feel an "um" coming, pause instead. Silence sounds more confident.',
+    exercise: 'pause_control'
+  };
+}
+
 const PraatTooltip = ({ active, payload, unit }) => {
   if (active && payload && payload.length) {
     return (
@@ -63,6 +167,27 @@ const PraatTooltip = ({ active, payload, unit }) => {
   }
   return null;
 };
+
+// Teacher explanation box component
+function TeacherBox({ explanation, onExerciseClick }) {
+  if (!explanation) return null;
+  return (
+    <div className={`${styles.teacherBox} ${explanation.status === 'good' ? styles.teacherBoxGood : styles.teacherBoxWarning}`}>
+      <div className={styles.teacherBoxHeader}>
+        <span className={styles.teacherBoxIcon}>{explanation.status === 'good' ? '✅' : '⚠️'}</span>
+        <p className={styles.teacherBoxText}>{explanation.text}</p>
+      </div>
+      <div className={styles.teacherBoxTip}>
+        <span>💡 Coach tip:</span> {explanation.tip}
+      </div>
+      {explanation.exercise && (
+        <button className={styles.teacherExerciseBtn} onClick={() => onExerciseClick(explanation.exercise)}>
+          📌 Practice: {EXERCISE_LINKS[explanation.exercise]?.title} →
+        </button>
+      )}
+    </div>
+  );
+}
 
 export default function Record() {
   const router = useRouter();
@@ -79,7 +204,6 @@ export default function Record() {
   const [reportData, setReportData] = useState(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [error, setError] = useState('');
-
   const [coachStep, setCoachStep] = useState(0);
   const [recommendedExercise, setRecommendedExercise] = useState(null);
   const [loadingExercise, setLoadingExercise] = useState(false);
@@ -88,12 +212,8 @@ export default function Record() {
   const [assigningProgram, setAssigningProgram] = useState(false);
   const [programAssigned, setProgramAssigned] = useState(false);
   const [weakestCategory, setWeakestCategory] = useState(null);
-
-  // Challenge mode
   const [challengeId, setChallengeId] = useState(null);
   const [challengePrompt, setChallengePrompt] = useState(null);
-
-  // Phase 2B — Personal Bests
   const [newPersonalBests, setNewPersonalBests] = useState([]);
   const [showCelebration, setShowCelebration] = useState(false);
 
@@ -107,21 +227,11 @@ export default function Record() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) router.push('/login');
-
-    // Challenge mode — check URL params
     const params = new URLSearchParams(window.location.search);
     const cId = params.get('challenge_id');
     const cPrompt = params.get('prompt');
-    if (cId) {
-      setChallengeId(parseInt(cId));
-      setChallengePrompt(decodeURIComponent(cPrompt || ''));
-    }
-
-    return () => {
-      clearInterval(timerRef.current);
-      cancelAnimationFrame(animRef.current);
-      clearInterval(pollRef.current);
-    };
+    if (cId) { setChallengeId(parseInt(cId)); setChallengePrompt(decodeURIComponent(cPrompt || '')); }
+    return () => { clearInterval(timerRef.current); cancelAnimationFrame(animRef.current); clearInterval(pollRef.current); };
   }, []);
 
   useEffect(() => {
@@ -137,10 +247,7 @@ export default function Record() {
     setLoadingExercise(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/exercises/all?category=${category}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/exercises/all?category=${category}`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (res.ok && data.length > 0) setRecommendedExercise(data[0]);
     } catch (err) { console.error(err); }
@@ -151,10 +258,7 @@ export default function Record() {
     setLoadingSentences(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/exercises/practice-sentences/${exerciseId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/exercises/practice-sentences/${exerciseId}`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (res.ok) setExerciseSentences(data.sentences);
     } catch (err) { console.error(err); }
@@ -167,15 +271,11 @@ export default function Record() {
     if (!progName) return;
     setAssigningProgram(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/programs/all`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/programs/all`, { headers: { Authorization: `Bearer ${token}` } });
       const programs = await res.json();
       const match = programs.find(p => p.title === progName);
       if (!match) return;
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/programs/assign/${match.id}`, {
-        method: 'POST', headers: { Authorization: `Bearer ${token}` }
-      });
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/programs/assign/${match.id}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
       setProgramAssigned(true);
     } catch (err) { console.error(err); }
     finally { setAssigningProgram(false); }
@@ -185,10 +285,7 @@ export default function Record() {
     if (!challengeId) return;
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/challenges/complete/${challengeId}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/challenges/complete/${challengeId}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
     } catch (err) { console.error(err); }
   }
 
@@ -207,42 +304,26 @@ export default function Record() {
       mr.ondataavailable = e => chunksRef.current.push(e.data);
       mr.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        setAudioBlob(blob);
-        setAudioUrl(URL.createObjectURL(blob));
-        setPhase('recorded');
+        setAudioBlob(blob); setAudioUrl(URL.createObjectURL(blob)); setPhase('recorded');
       };
-      mr.start();
-      setPhase('recording');
-      setSeconds(0);
+      mr.start(); setPhase('recording'); setSeconds(0);
       timerRef.current = setInterval(() => {
-        setSeconds(s => {
-          if (s >= 59) { stopRecording(); return 60; }
-          return s + 1;
-        });
+        setSeconds(s => { if (s >= 59) { stopRecording(); return 60; } return s + 1; });
       }, 1000);
       function drawBars() {
         const data = new Uint8Array(analyserRef.current.frequencyBinCount);
         analyserRef.current.getByteFrequencyData(data);
-        const newBars = Array.from({ length: 40 }, (_, i) => {
-          const val = data[Math.floor(i * data.length / 40)] || 0;
-          return Math.max(4, (val / 255) * 80);
-        });
-        setBars(newBars);
+        setBars(Array.from({ length: 40 }, (_, i) => Math.max(4, ((data[Math.floor(i * data.length / 40)] || 0) / 255) * 80)));
         animRef.current = requestAnimationFrame(drawBars);
       }
       drawBars();
-    } catch (err) {
-      setError('Microphone access denied. Please allow microphone and try again.');
-    }
+    } catch (err) { setError('Microphone access denied. Please allow microphone and try again.'); }
   }
 
   function stopRecording() {
-    clearInterval(timerRef.current);
-    cancelAnimationFrame(animRef.current);
-    setBars(Array(40).fill(4));
+    clearInterval(timerRef.current); cancelAnimationFrame(animRef.current); setBars(Array(40).fill(4));
     if (mediaRef.current && mediaRef.current.state !== 'inactive') {
-      mediaRef.current.stop();
-      mediaRef.current.stream.getTracks().forEach(t => t.stop());
+      mediaRef.current.stop(); mediaRef.current.stream.getTracks().forEach(t => t.stop());
     }
   }
 
@@ -253,21 +334,14 @@ export default function Record() {
     try {
       const token = localStorage.getItem('token');
       const formData = new FormData();
-      formData.append('file', file, file.name);
-      formData.append('duration', 0);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/audio/upload`, {
-        method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData,
-      });
+      formData.append('file', file, file.name); formData.append('duration', 0);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/audio/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
       const data = await res.json();
-      if (res.status === 403 && data.detail?.error === 'plan_limit_reached') {
-        setError(data.detail.message); setShowUpgrade(true); return;
-      }
+      if (res.status === 403 && data.detail?.error === 'plan_limit_reached') { setError(data.detail.message); setShowUpgrade(true); return; }
       if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Upload failed');
       setRecordingId(data.id); setPhase('transcribing'); setTranscribing(true);
-      startPolling(data.id, token);
-      await completeChallenge();
-    } catch (err) { setError(err.message); }
-    finally { setUploading(false); }
+      startPolling(data.id, token); await completeChallenge();
+    } catch (err) { setError(err.message); } finally { setUploading(false); }
   }
 
   async function uploadRecording() {
@@ -276,44 +350,30 @@ export default function Record() {
     try {
       const token = localStorage.getItem('token');
       const formData = new FormData();
-      formData.append('file', audioBlob, 'recording.webm');
-      formData.append('duration', seconds);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/audio/upload`, {
-        method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData,
-      });
+      formData.append('file', audioBlob, 'recording.webm'); formData.append('duration', seconds);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/audio/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
       const data = await res.json();
-      if (res.status === 403 && data.detail?.error === 'plan_limit_reached') {
-        setError(data.detail.message); setShowUpgrade(true); return;
-      }
+      if (res.status === 403 && data.detail?.error === 'plan_limit_reached') { setError(data.detail.message); setShowUpgrade(true); return; }
       if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Upload failed');
       setRecordingId(data.id); setPhase('transcribing'); setTranscribing(true);
-      startPolling(data.id, token);
-      await completeChallenge();
-    } catch (err) { setError(err.message); }
-    finally { setUploading(false); }
+      startPolling(data.id, token); await completeChallenge();
+    } catch (err) { setError(err.message); } finally { setUploading(false); }
   }
 
   function startPolling(id, token) {
     pollRef.current = setInterval(async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/audio/recording/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/audio/recording/${id}`, { headers: { Authorization: `Bearer ${token}` } });
         const data = await res.json();
         if (data.transcript) {
           setTranscript(data.transcript);
           if (data.acoustic_data) setAnalysisData(data.acoustic_data);
           if (data.report) {
             setReportData(data.report);
-            // Check personal bests
             const pbs = data.report.feedback?.personal_bests;
-            if (pbs && pbs.length > 0) {
-              setNewPersonalBests(pbs);
-              setShowCelebration(true);
-            }
+            if (pbs && pbs.length > 0) { setNewPersonalBests(pbs); setShowCelebration(true); }
           }
-          setTranscribing(false); setPhase('done');
-          clearInterval(pollRef.current);
+          setTranscribing(false); setPhase('done'); clearInterval(pollRef.current);
         }
       } catch (err) { console.error(err); }
     }, 3000);
@@ -331,6 +391,10 @@ export default function Record() {
     clearInterval(pollRef.current);
   }
 
+  function goToExercise(category) {
+    router.push(`/exercises?category=${category}`);
+  }
+
   const fmt = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   const catMeta = weakestCategory ? CATEGORY_LABELS[weakestCategory] : null;
   const progRec = weakestCategory ? PROGRAM_RECOMMENDATIONS[weakestCategory] : null;
@@ -338,9 +402,14 @@ export default function Record() {
   const waveformData = analysisData ? buildWaveformData(analysisData.pitch_values) : [];
   const pauseMarkers = analysisData ? buildPauseMarkers(analysisData.pause_durations, analysisData.duration_seconds) : [];
 
+  const waveformExpl = analysisData ? getWaveformExplanation(analysisData) : null;
+  const pitchExpl    = analysisData ? getPitchExplanation(analysisData) : null;
+  const pauseExpl    = analysisData ? getPauseExplanation(analysisData) : null;
+  const wpmExpl      = analysisData ? getWpmExplanation(analysisData) : null;
+  const fillerExpl   = analysisData ? getFillerExplanation(analysisData) : null;
+
   return (
     <div className={styles.page}>
-
       {/* FIXED UPGRADE TOAST */}
       {showUpgrade && (
         <div className={styles.fixedToastOverlay}>
@@ -371,9 +440,7 @@ export default function Record() {
             <span className={styles.logoText}>Voice<span>Control</span> AI</span>
           </div>
           <div className={styles.navRight}>
-            <span className={styles.pill}>
-              {challengeId ? "Today's Challenge" : "Voice Assessment"}
-            </span>
+            <span className={styles.pill}>{challengeId ? "Today's Challenge" : "Voice Assessment"}</span>
             <button className={styles.btnGhost} onClick={() => router.push('/dashboard')}>Dashboard</button>
           </div>
         </div>
@@ -381,20 +448,12 @@ export default function Record() {
 
       <main className={styles.main}>
 
-        {/* PROMPT */}
         <div className={styles.promptCard}>
-          <p className={styles.eyebrow}>
-            {challengeId ? "Today's Voice Challenge" : "Recording Prompt"}
-          </p>
-          <p className={styles.promptText}>
-            "{challengePrompt || 'Introduce yourself and describe your work.'}"
-          </p>
-          {challengeId && (
-            <span className={styles.challengeXpBadge}>+20 XP on completion</span>
-          )}
+          <p className={styles.eyebrow}>{challengeId ? "Today's Voice Challenge" : "Recording Prompt"}</p>
+          <p className={styles.promptText}>"{challengePrompt || 'Introduce yourself and describe your work.'}"</p>
+          {challengeId && <span className={styles.challengeXpBadge}>+20 XP on completion</span>}
         </div>
 
-        {/* UPLOAD OPTION */}
         {phase === 'idle' && (
           <div className={styles.uploadCard}>
             <p className={styles.uploadLabel}>
@@ -415,7 +474,6 @@ export default function Record() {
 
         {error && <div className={styles.errorBox}>{error}</div>}
 
-        {/* RECORDER */}
         <div className={styles.recorderCard}>
           <div className={styles.timer}>
             <span className={styles.timerText}>{fmt(seconds)}</span>
@@ -448,13 +506,9 @@ export default function Record() {
               )}
             </button>
           </div>
-
           <div className={styles.waveform}>
-            {bars.map((h, i) => (
-              <span key={i} style={{ height: `${h}px` }} className={phase === 'recording' ? styles.barActive : styles.bar} />
-            ))}
+            {bars.map((h, i) => <span key={i} style={{ height: `${h}px` }} className={phase === 'recording' ? styles.barActive : styles.bar} />)}
           </div>
-
           <p className={styles.statusText}>
             {phase === 'idle' && 'Tap the microphone to begin your 60-second assessment'}
             {phase === 'recording' && '🔴 Recording — tap stop when finished'}
@@ -462,7 +516,6 @@ export default function Record() {
             {phase === 'transcribing' && '⏳ Voice Control AI is analyzing your voice...'}
             {phase === 'done' && '✅ Analysis complete'}
           </p>
-
           {(phase === 'recorded' || phase === 'transcribing' || phase === 'done') && audioUrl && (
             <div className={styles.playbackSection}>
               <p className={styles.playbackLabel}>Your Recording</p>
@@ -477,7 +530,6 @@ export default function Record() {
               )}
             </div>
           )}
-
           {phase === 'transcribing' && (
             <div className={styles.transcribingBox}>
               <div className={styles.spinner}></div>
@@ -496,11 +548,8 @@ export default function Record() {
                 <div key={i} className={styles.celebrationItem}>
                   <span className={styles.celebrationMetric}>{pb.metric.charAt(0).toUpperCase() + pb.metric.slice(1)}</span>
                   <span className={styles.celebrationScore}>{pb.new_score}</span>
-                  {pb.previous_best ? (
-                    <span className={styles.celebrationImprove}>+{pb.improvement} from {Math.round(pb.previous_best)}</span>
-                  ) : (
-                    <span className={styles.celebrationImprove}>First score!</span>
-                  )}
+                  {pb.previous_best ? <span className={styles.celebrationImprove}>+{pb.improvement} from {Math.round(pb.previous_best)}</span>
+                    : <span className={styles.celebrationImprove}>First score!</span>}
                 </div>
               ))}
             </div>
@@ -508,13 +557,13 @@ export default function Record() {
           </div>
         )}
 
-        {/* PRAAT ACOUSTIC VISUALIZATION */}
+        {/* PRAAT ACOUSTIC VISUALIZATION — WITH TEACHER EXPLANATIONS */}
         {phase === 'done' && analysisData && pitchChartData.length > 0 && (
           <div className={styles.praatPanel}>
             <div className={styles.praatHeader}>
               <p className={styles.eyebrow}>Acoustic Analysis</p>
               <h2 className={styles.praatTitle}>Voice Signal Visualization</h2>
-              <p className={styles.praatSub}>Waveform, pitch curve, and pause segments</p>
+              <p className={styles.praatSub}>Each section below shows what your voice did — and what to do next.</p>
             </div>
 
             {/* WAVEFORM */}
@@ -536,23 +585,20 @@ export default function Record() {
                     <XAxis dataKey="t" hide />
                     <YAxis domain={[0, 100]} hide />
                     <Area type="monotone" dataKey="amp" stroke="#2DD4BF" strokeWidth={1.5} fill="url(#waveGrad)" dot={false} isAnimationActive={false} />
-                    {pauseMarkers.map((pm, i) => (
-                      <ReferenceLine key={i} x={pm.position} stroke="rgba(248,113,113,0.5)" strokeDasharray="3 3" />
-                    ))}
+                    {pauseMarkers.map((pm, i) => <ReferenceLine key={i} x={pm.position} stroke="rgba(248,113,113,0.5)" strokeDasharray="3 3" />)}
                     <Tooltip content={<PraatTooltip unit="%" />} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
+              <TeacherBox explanation={waveformExpl} onExerciseClick={goToExercise} />
             </div>
 
             {/* PITCH CURVE */}
             <div className={styles.praatSection}>
               <div className={styles.praatSectionHeader}>
                 <span className={styles.praatSectionDot} style={{ background: '#C9A84C' }}></span>
-                <span className={styles.praatSectionLabel}>Pitch Curve (F0)</span>
-                <span className={styles.praatSectionInfo}>
-                  {analysisData.pitch_min_hz}–{analysisData.pitch_max_hz} Hz · avg {analysisData.pitch_mean_hz} Hz
-                </span>
+                <span className={styles.praatSectionLabel}>Pitch Curve (F0) — Vocal Variety</span>
+                <span className={styles.praatSectionInfo}>{analysisData.pitch_min_hz}–{analysisData.pitch_max_hz} Hz · avg {analysisData.pitch_mean_hz} Hz</span>
               </div>
               <div className={styles.praatChartWrap}>
                 <ResponsiveContainer width="100%" height={120}>
@@ -563,9 +609,7 @@ export default function Record() {
                       tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} width={40} tickFormatter={v => `${v}Hz`} />
                     <ReferenceLine y={analysisData.pitch_mean_hz} stroke="rgba(201,168,76,0.3)" strokeDasharray="4 4"
                       label={{ value: `avg ${analysisData.pitch_mean_hz}Hz`, fill: 'rgba(201,168,76,0.6)', fontSize: 9, position: 'right' }} />
-                    {pauseMarkers.map((pm, i) => (
-                      <ReferenceLine key={i} x={pm.position} stroke="rgba(248,113,113,0.4)" strokeDasharray="3 3" />
-                    ))}
+                    {pauseMarkers.map((pm, i) => <ReferenceLine key={i} x={pm.position} stroke="rgba(248,113,113,0.4)" strokeDasharray="3 3" />)}
                     <Tooltip content={<PraatTooltip unit="Hz" />} />
                     <Line type="monotone" dataKey="hz" stroke="#C9A84C" strokeWidth={2} dot={false} connectNulls={false} isAnimationActive={false} />
                   </LineChart>
@@ -583,13 +627,14 @@ export default function Record() {
                 </span>
                 <span className={styles.praatRange}>Range: {analysisData.pitch_range_hz} Hz</span>
               </div>
+              <TeacherBox explanation={pitchExpl} onExerciseClick={goToExercise} />
             </div>
 
             {/* PAUSE SEGMENTS */}
             <div className={styles.praatSection}>
               <div className={styles.praatSectionHeader}>
                 <span className={styles.praatSectionDot} style={{ background: '#F87171' }}></span>
-                <span className={styles.praatSectionLabel}>Pause Segments</span>
+                <span className={styles.praatSectionLabel}>Pause Segments — Breath Control</span>
                 <span className={styles.praatSectionInfo}>{analysisData.pause_count} pauses · avg {analysisData.avg_pause_duration}s</span>
               </div>
               <div className={styles.praatTextGrid}>
@@ -601,9 +646,7 @@ export default function Record() {
                         const pauseWidth = (dur / total) * 100;
                         return (
                           <div key={i} style={{ display: 'flex', flex: 1 }}>
-                            <div className={styles.praatSpeechSeg} style={{ flex: 1 }}>
-                              <span className={styles.praatSegLabel}>speech</span>
-                            </div>
+                            <div className={styles.praatSpeechSeg} style={{ flex: 1 }}><span className={styles.praatSegLabel}>speech</span></div>
                             <div className={styles.praatPauseSeg} style={{ width: `${Math.max(pauseWidth * 3, 4)}%` }} title={`Pause: ${dur}s`}>
                               <span className={styles.praatPauseLabel}>{dur}s</span>
                             </div>
@@ -611,13 +654,9 @@ export default function Record() {
                         );
                       })
                     ) : (
-                      <div className={styles.praatSpeechSeg} style={{ flex: 1 }}>
-                        <span className={styles.praatSegLabel}>speech (no pauses detected)</span>
-                      </div>
+                      <div className={styles.praatSpeechSeg} style={{ flex: 1 }}><span className={styles.praatSegLabel}>speech (no pauses detected)</span></div>
                     )}
-                    <div className={styles.praatSpeechSeg} style={{ flex: 1 }}>
-                      <span className={styles.praatSegLabel}>speech</span>
-                    </div>
+                    <div className={styles.praatSpeechSeg} style={{ flex: 1 }}><span className={styles.praatSegLabel}>speech</span></div>
                   </div>
                   <div className={styles.praatTimeLabels}>
                     <span>0s</span>
@@ -640,13 +679,14 @@ export default function Record() {
                   </span>
                 </div>
               </div>
+              <TeacherBox explanation={pauseExpl} onExerciseClick={goToExercise} />
             </div>
 
             {/* SPEAKING RATE */}
             <div className={styles.praatSection}>
               <div className={styles.praatSectionHeader}>
                 <span className={styles.praatSectionDot} style={{ background: '#4ADE80' }}></span>
-                <span className={styles.praatSectionLabel}>Speaking Rate</span>
+                <span className={styles.praatSectionLabel}>Speaking Rate — Pace Control</span>
                 <span className={styles.praatSectionInfo}>Target: 130–160 WPM</span>
               </div>
               <div className={styles.praatWpmRow}>
@@ -678,6 +718,7 @@ export default function Record() {
                   {analysisData.wpm_status === 'too_slow' && '⚠️ Too slow'}
                 </span>
               </div>
+              <TeacherBox explanation={wpmExpl} onExerciseClick={goToExercise} />
             </div>
 
             {/* FILLER WORDS */}
@@ -685,20 +726,19 @@ export default function Record() {
               <div className={styles.praatSection}>
                 <div className={styles.praatSectionHeader}>
                   <span className={styles.praatSectionDot} style={{ background: '#F87171' }}></span>
-                  <span className={styles.praatSectionLabel}>Filler Words</span>
+                  <span className={styles.praatSectionLabel}>Filler Words — Confidence Signals</span>
                   <span className={styles.praatSectionInfo}>{analysisData.total_fillers} total · {analysisData.filler_percent}% of speech</span>
                 </div>
                 <div className={styles.praatFillers}>
                   {Object.entries(analysisData.filler_words).map(([word, count]) => (
                     <div key={word} className={styles.praatFillerItem}>
                       <span className={styles.praatFillerWord}>"{word}"</span>
-                      <div className={styles.praatFillerBar}>
-                        <div className={styles.praatFillerFill} style={{ width: `${Math.min(100, count * 25)}%` }}></div>
-                      </div>
+                      <div className={styles.praatFillerBar}><div className={styles.praatFillerFill} style={{ width: `${Math.min(100, count * 25)}%` }}></div></div>
                       <span className={styles.praatFillerCount}>×{count}</span>
                     </div>
                   ))}
                 </div>
+                <TeacherBox explanation={fillerExpl} onExerciseClick={goToExercise} />
               </div>
             )}
           </div>
@@ -723,9 +763,7 @@ export default function Record() {
               ].map((item, i) => (
                 <div key={i} className={styles.coachBarRow}>
                   <span className={styles.coachBarLabel}>{item.label}</span>
-                  <div className={styles.coachBarTrack}>
-                    <div className={styles.coachBarFill} style={{ width: `${item.score}%`, background: item.color }} />
-                  </div>
+                  <div className={styles.coachBarTrack}><div className={styles.coachBarFill} style={{ width: `${item.score}%`, background: item.color }} /></div>
                   <span className={styles.coachBarScore} style={{ color: item.color }}>{item.score}</span>
                 </div>
               ))}
@@ -734,9 +772,7 @@ export default function Record() {
               <div className={styles.coachWeaknessBox} style={{ borderColor: `${catMeta.color}44`, background: `${catMeta.color}0d` }}>
                 <p className={styles.coachWeaknessLabel}>Your biggest area to work on:</p>
                 <p className={styles.coachWeaknessTitle} style={{ color: catMeta.color }}>{catMeta.icon} {catMeta.label}</p>
-                {reportData.feedback?.weaknesses?.length > 0 && (
-                  <p className={styles.coachWeaknessDetail}>⚠️ {reportData.feedback.weaknesses[0]}</p>
-                )}
+                {reportData.feedback?.weaknesses?.length > 0 && <p className={styles.coachWeaknessDetail}>⚠️ {reportData.feedback.weaknesses[0]}</p>}
               </div>
             )}
             {coachStep === 1 && (
@@ -768,19 +804,13 @@ export default function Record() {
                   <div className={styles.audioExamples}>
                     {recommendedExercise.wrong_audio_url && (
                       <div className={styles.audioExample}>
-                        <div className={styles.audioExampleHeader}>
-                          <span className={styles.wrongDot}></span>
-                          <p className={styles.audioExampleLabel}>Wrong Example</p>
-                        </div>
+                        <div className={styles.audioExampleHeader}><span className={styles.wrongDot}></span><p className={styles.audioExampleLabel}>Wrong Example</p></div>
                         <audio controls src={recommendedExercise.wrong_audio_url} className={styles.audioExamplePlayer} preload="none" />
                       </div>
                     )}
                     {recommendedExercise.correct_audio_url && (
                       <div className={styles.audioExample}>
-                        <div className={styles.audioExampleHeader}>
-                          <span className={styles.correctDot}></span>
-                          <p className={styles.audioExampleLabel}>Correct Example</p>
-                        </div>
+                        <div className={styles.audioExampleHeader}><span className={styles.correctDot}></span><p className={styles.audioExampleLabel}>Correct Example</p></div>
                         <audio controls src={recommendedExercise.correct_audio_url} className={styles.audioExamplePlayer} preload="none" />
                       </div>
                     )}
@@ -791,10 +821,7 @@ export default function Record() {
                   <p className={styles.templateText}>"{recommendedExercise.practice_template}"</p>
                 </div>
                 <div className={styles.sentencesBox}>
-                  <p className={styles.sentencesLabel}>
-                    Voice Control AI Practice Sentences
-                    <span className={styles.aiTag}>AI</span>
-                  </p>
+                  <p className={styles.sentencesLabel}>Voice Control AI Practice Sentences<span className={styles.aiTag}>AI</span></p>
                   {loadingSentences ? (
                     <div className={styles.sentencesLoading}><div className={styles.spinnerSmall}></div><span>Generating practice sentences...</span></div>
                   ) : (
@@ -866,9 +893,7 @@ export default function Record() {
               { icon: '⏸️', tip: 'Use pauses before key points' },
               { icon: '🔊', tip: 'Project your voice with confidence' },
               { icon: '⬇️', tip: 'End statements with a downward tone' },
-            ].map((t, i) => (
-              <div key={i} className={styles.tipCard}><span>{t.icon}</span><p>{t.tip}</p></div>
-            ))}
+            ].map((t, i) => <div key={i} className={styles.tipCard}><span>{t.icon}</span><p>{t.tip}</p></div>)}
           </div>
         )}
 
