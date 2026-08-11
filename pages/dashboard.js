@@ -560,65 +560,86 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-
-        {/* BEFORE & AFTER COMPARISON */}
-        {comparison && (
-          <div className={styles.comparisonCard}>
-            <p className={styles.eyebrow}>Before & After</p>
-            <h2 className={styles.comparisonTitle}>Your Voice Journey</h2>
-            <div className={styles.comparisonGrid}>
-              <div className={styles.comparisonCol}>
-                <p className={styles.comparisonColLabel}>First Recording</p>
-                <p className={styles.comparisonColDate}>{comparison.first.date}</p>
-                <p className={styles.comparisonLevel}>{comparison.first.user_level}</p>
-                {[
-                  { label: 'Authority',  score: comparison.first.authority_score,  color: 'var(--gold)' },
-                  { label: 'Confidence', score: comparison.first.confidence_score, color: 'var(--teal)' },
-                  { label: 'Presence',   score: comparison.first.presence_score,   color: 'var(--purple)' },
-                  { label: 'Leadership', score: comparison.first.leadership_score, color: 'var(--green)' },
-                ].map((item, i) => (
-                  <div key={i} className={styles.comparisonRow}>
-                    <span className={styles.comparisonRowLabel}>{item.label}</span>
-                    <div className={styles.comparisonBarTrack}>
-                      <div className={styles.comparisonBarFill} style={{ width: `${item.score}%`, background: item.color, opacity: 0.5 }} />
-                    </div>
-                    <span className={styles.comparisonRowScore} style={{ color: item.color }}>{item.score}</span>
-                  </div>
-                ))}
-              </div>
-              <div className={styles.comparisonDivider}>
-                <div className={styles.comparisonArrow}>→</div>
-              </div>
-              <div className={styles.comparisonCol}>
-                <p className={styles.comparisonColLabel}>Latest Recording</p>
-                <p className={styles.comparisonColDate}>{comparison.latest.date}</p>
-                <p className={styles.comparisonLevel}>{comparison.latest.user_level}</p>
-                {[
-                  { label: 'Authority',  score: comparison.latest.authority_score,  imp: comparison.improvements.authority,  color: 'var(--gold)' },
-                  { label: 'Confidence', score: comparison.latest.confidence_score, imp: comparison.improvements.confidence, color: 'var(--teal)' },
-                  { label: 'Presence',   score: comparison.latest.presence_score,   imp: comparison.improvements.presence,   color: 'var(--purple)' },
-                  { label: 'Leadership', score: comparison.latest.leadership_score, imp: comparison.improvements.leadership, color: 'var(--green)' },
-                ].map((item, i) => (
-                  <div key={i} className={styles.comparisonRow}>
-                    <span className={styles.comparisonRowLabel}>{item.label}</span>
-                    <div className={styles.comparisonBarTrack}>
-                      <div className={styles.comparisonBarFill} style={{ width: `${item.score}%`, background: item.color }} />
-                    </div>
-                    <span className={styles.comparisonRowScore} style={{ color: item.color }}>
-                      {item.score}
-                      {item.imp !== 0 && (
-                        <span style={{ fontSize: '10px', marginLeft: '4px', color: item.imp > 0 ? 'var(--green)' : 'var(--red)' }}>
-                          {item.imp > 0 ? `+${item.imp}` : item.imp}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                ))}
-              </div>
+{/* BEFORE & AFTER COMPARISON */}
+{comparison && (
+  <div className={styles.comparisonCard}>
+    <p className={styles.eyebrow}>Before & After</p>
+    <h2 className={styles.comparisonTitle}>Your Voice Journey</h2>
+    <div className={styles.comparisonGrid}>
+      {/* BEFORE */}
+      <div className={styles.comparisonCol}>
+        <div className={styles.comparisonHeading}>
+          <span className={styles.comparisonHeadingBefore}>BEFORE</span>
+          <p className={styles.comparisonColDate}>{comparison.first.date}</p>
+        </div>
+        <p className={styles.comparisonLevel}>{comparison.first.user_level}</p>
+        {[
+          { label: 'Authority',  score: comparison.first.authority_score,  color: 'var(--gold)' },
+          { label: 'Confidence', score: comparison.first.confidence_score, color: 'var(--teal)' },
+          { label: 'Presence',   score: comparison.first.presence_score,   color: 'var(--purple)' },
+          { label: 'Leadership', score: comparison.first.leadership_score, color: 'var(--green)' },
+        ].map((item, i) => (
+          <div key={i} className={styles.comparisonRow}>
+            <span className={styles.comparisonRowLabel}>{item.label}</span>
+            <div className={styles.comparisonBarTrack}>
+              <div className={styles.comparisonBarFill} style={{ width: `${item.score}%`, background: item.color, opacity: 0.45 }} />
             </div>
+            <span className={styles.comparisonRowScore} style={{ color: item.color }}>{item.score}</span>
           </div>
-        )}
+        ))}
+      </div>
 
+      {/* DIVIDER */}
+      <div className={styles.comparisonDivider}>
+        <div className={styles.comparisonArrow}>→</div>
+      </div>
+
+      {/* AFTER */}
+      <div className={styles.comparisonCol}>
+        <div className={styles.comparisonHeading}>
+          <span className={styles.comparisonHeadingAfter}>AFTER</span>
+          <p className={styles.comparisonColDate}>{comparison.latest.date}</p>
+        </div>
+        <p className={styles.comparisonLevel}>{comparison.latest.user_level}</p>
+        {[
+          { label: 'Authority',  score: comparison.latest.authority_score,  imp: comparison.improvements.authority,  color: 'var(--gold)' },
+          { label: 'Confidence', score: comparison.latest.confidence_score, imp: comparison.improvements.confidence, color: 'var(--teal)' },
+          { label: 'Presence',   score: comparison.latest.presence_score,   imp: comparison.improvements.presence,   color: 'var(--purple)' },
+          { label: 'Leadership', score: comparison.latest.leadership_score, imp: comparison.improvements.leadership, color: 'var(--green)' },
+        ].map((item, i) => (
+          <div key={i} className={styles.comparisonRow}>
+            <span className={styles.comparisonRowLabel}>{item.label}</span>
+            <div className={styles.comparisonBarTrack}>
+              <div className={styles.comparisonBarFill} style={{ width: `${item.score}%`, background: item.color }} />
+            </div>
+            <span className={styles.comparisonRowScore} style={{ color: item.color }}>
+              {item.score}
+              {item.imp !== 0 && (
+                <span style={{ fontSize: '10px', marginLeft: '5px', color: item.imp > 0 ? 'var(--green)' : 'var(--red)', fontWeight: 700 }}>
+                  {item.imp > 0 ? `+${item.imp}` : item.imp}
+                </span>
+              )}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* IMPROVEMENT SUMMARY */}
+    <div className={styles.comparisonSummary}>
+      {Object.entries(comparison.improvements).map(([key, val]) => (
+        val !== 0 && (
+          <div key={key} className={styles.comparisonSummaryItem}>
+            <span className={styles.comparisonSummaryLabel}>{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+            <span className={styles.comparisonSummaryVal} style={{ color: val > 0 ? 'var(--green)' : 'var(--red)' }}>
+              {val > 0 ? `+${val}` : val} points
+            </span>
+          </div>
+        )
+      ))}
+    </div>
+  </div>
+)}
         {/* PROGRESS CHART */}
         {chartData?.length > 1 && (
           <div className={styles.chartCard}>

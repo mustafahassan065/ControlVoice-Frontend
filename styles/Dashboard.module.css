@@ -314,3 +314,53 @@
   letter-spacing: 0.02em;
 }
 .calDayToday .calDayDate { color: var(--gold); }
+.comparisonHeading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.comparisonHeadingBefore {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.15em;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-sub);
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+.comparisonHeadingAfter {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--gold-light);
+  letter-spacing: 0.15em;
+  background: var(--gold-dim);
+  border: 1px solid var(--gold-border);
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+.comparisonSummary {
+  border-top: 1px solid var(--border-sub);
+  padding-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.comparisonSummaryItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-sub);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+}
+.comparisonSummaryLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.comparisonSummaryVal {
+  font-size: 13px;
+  font-weight: 700;
+}
