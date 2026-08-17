@@ -1,0 +1,62 @@
+.page { min-height: 100vh; background: var(--navy); display: flex; flex-direction: column; }
+.header { display: flex; align-items: center; justify-content: space-between; padding: 20px 32px; border-bottom: 1px solid var(--border-sub); }
+.logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.logoIcon { width: 30px; height: 30px; background: var(--gold-dim); border: 1px solid var(--gold-border); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--gold); }
+.logoText { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--white); }
+.logoText span { color: var(--gold); }
+.headerSub { font-size: 13px; color: var(--text-muted); }
+
+.progressWrap { padding: 16px 32px 0; display: flex; align-items: center; gap: 16px; }
+.progressBar { flex: 1; height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; }
+.progressFill { height: 5px; background: var(--gold); border-radius: 3px; transition: width 0.5s ease; }
+.progressLabel { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+
+.main { flex: 1; display: flex; justify-content: center; padding: 32px 24px 60px; }
+.taskCard { width: 100%; max-width: 680px; display: flex; flex-direction: column; gap: 20px; }
+.taskHeader { display: flex; flex-direction: column; gap: 8px; }
+.taskBadge { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--white); }
+.taskFocus { font-size: 13px; color: var(--gold-light); font-weight: 500; }
+
+.instructionBox { background: var(--navy-2); border: 1px solid var(--border-sub); border-radius: var(--radius-md); padding: 18px 20px; }
+.instructionLabel { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
+.instructionText { font-size: 14px; color: var(--text-dim); line-height: 1.7; margin: 0; }
+
+.contentBox { background: rgba(201,168,76,0.07); border: 1px solid rgba(201,168,76,0.2); border-radius: var(--radius-md); padding: 20px; }
+.contentLabel { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold); font-weight: 600; margin-bottom: 10px; }
+.contentText { font-family: var(--font-display); font-size: 16px; color: var(--white); line-height: 1.7; margin: 0; }
+
+.durationRow { display: flex; gap: 16px; font-size: 13px; color: var(--text-muted); }
+
+.prepBox { background: var(--navy-2); border: 1px solid var(--gold-border); border-radius: var(--radius-md); padding: 32px; text-align: center; display: flex; flex-direction: column; gap: 10px; }
+.prepLabel { font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.prepCountdown { font-family: var(--font-display); font-size: 64px; font-weight: 700; color: var(--gold); }
+.prepSub { font-size: 13px; color: var(--text-muted); }
+
+.recorderBox { background: var(--navy-2); border: 1px solid var(--border-sub); border-radius: var(--radius-md); padding: 28px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.recordingTimer { font-family: var(--font-display); font-size: 32px; font-weight: 700; color: var(--gold); }
+.waveform { display: flex; align-items: center; gap: 3px; height: 60px; }
+.bar { display: inline-block; width: 4px; background: var(--gold); border-radius: 2px; transition: height 0.08s ease; }
+.recordingStatus { font-size: 13px; color: var(--red); font-weight: 600; }
+.stopBtn { background: var(--red); border: none; color: white; padding: 10px 24px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; font-family: var(--font-body); }
+
+.recordedBox { display: flex; flex-direction: column; gap: 14px; width: 100%; align-items: center; }
+.recordedLabel { font-size: 14px; color: var(--text-dim); }
+.audioPlayer { width: 100%; max-width: 400px; }
+.recordedActions { display: flex; gap: 12px; }
+.retakeBtn { background: transparent; border: 1px solid var(--border-sub); color: var(--text-muted); padding: 10px 20px; border-radius: var(--radius-sm); font-size: 13px; cursor: pointer; font-family: var(--font-body); transition: all 0.2s; }
+.retakeBtn:hover { border-color: rgba(255,255,255,0.2); color: var(--white); }
+.submitBtn { background: var(--gold); border: none; color: #0A0E1A; padding: 10px 24px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; font-family: var(--font-body); transition: background 0.2s; }
+.submitBtn:hover { background: var(--gold-light); }
+
+.startBtn { background: var(--gold); border: none; color: #0A0E1A; padding: 13px 32px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; font-family: var(--font-body); transition: background 0.2s; }
+.startBtn:hover { background: var(--gold-light); }
+
+.uploadingBox { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px; }
+.spinner { width: 28px; height: 28px; border: 3px solid rgba(201,168,76,0.2); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.doneCard { display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 60px 40px; text-align: center; background: var(--navy-2); border: 1px solid var(--gold-border); border-radius: var(--radius-md); max-width: 480px; }
+.doneIcon { font-size: 52px; }
+.doneTitle { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--white); }
+.doneSub { font-size: 15px; color: var(--text-muted); line-height: 1.7; }
+.continueBtn { background: var(--gold); border: none; color: #0A0E1A; padding: 13px 32px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; font-family: var(--font-body); }

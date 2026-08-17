@@ -364,3 +364,139 @@
   font-size: 13px;
   font-weight: 700;
 }
+
+/* ═══ ADD THESE TO Dashboard.module.css ═══ */
+
+/* TRAIN TODAY SECTION */
+.trainTodaySection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.trainTodayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.trainTodayTitle {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--white);
+  margin: 6px 0 0;
+}
+.streakBadge {
+  background: rgba(248,113,113,0.1);
+  border: 1px solid rgba(248,113,113,0.3);
+  color: #F87171;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* SESSION CARDS */
+.sessionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+.sessionCard {
+  background: var(--navy-2);
+  border: 1px solid var(--border-sub);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: border-color 0.2s;
+}
+.sessionCard:hover { border-color: rgba(201,168,76,0.3); }
+.sessionCardDone { border-color: rgba(74,222,128,0.2) !important; background: rgba(74,222,128,0.03) !important; }
+.sessionCardTop { display: flex; align-items: flex-start; gap: 12px; }
+.sessionIconWrap { font-size: 22px; flex-shrink: 0; }
+.sessionInfo { flex: 1; }
+.sessionTitle { font-size: 15px; font-weight: 700; color: var(--white); margin: 0 0 3px; }
+.sessionFocus { font-size: 12px; color: var(--gold-light); margin: 0; }
+.sessionDoneBadge { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: var(--green); padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+.sessionDesc { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0; }
+.sessionExercisePreview { background: rgba(255,255,255,0.03); border: 1px solid var(--border-sub); border-radius: var(--radius-sm); padding: 10px 14px; }
+.sessionExerciseLabel { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+.sessionExerciseName { font-size: 13px; color: var(--white); font-weight: 500; margin: 0; }
+
+/* RETRY COMPARISON */
+.retryComparison { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); padding: 10px 14px; }
+.retryAttempt { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.retryLabel { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.retryScore { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--white); }
+.retryArrow { font-size: 16px; color: var(--text-muted); }
+.retryImprovement { margin-left: auto; font-size: 16px; font-weight: 700; color: var(--green); }
+
+/* SESSION BUTTONS */
+.startSessionBtn {
+  background: var(--gold);
+  border: none;
+  color: #0A0E1A;
+  padding: 11px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: background 0.2s;
+  width: 100%;
+}
+.startSessionBtn:hover { background: var(--gold-light); }
+.retryBtn {
+  background: transparent;
+  border: 1px solid var(--border-sub);
+  color: var(--text-dim);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+  width: 100%;
+  transition: all 0.2s;
+}
+.retryBtn:hover { border-color: var(--gold-border); color: var(--gold-light); }
+
+.noSessionsCard { background: var(--navy-2); border: 1px solid var(--border-sub); border-radius: var(--radius-md); padding: 32px; text-align: center; color: var(--text-muted); display: flex; flex-direction: column; gap: 14px; align-items: center; }
+
+/* ═══ VIEW MY VOICE DATA BUTTON ═══ */
+.voiceDataBtnWrap {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
+}
+.voiceDataBtn {
+  background: var(--navy-2);
+  border: 2px solid var(--gold-border);
+  border-radius: var(--radius-md);
+  padding: 18px 28px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 560px;
+  transition: all 0.25s;
+  background: linear-gradient(135deg, rgba(201,168,76,0.07), var(--navy-2));
+}
+.voiceDataBtn:hover {
+  border-color: var(--gold);
+  background: linear-gradient(135deg, rgba(201,168,76,0.13), var(--navy-2));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 24px rgba(201,168,76,0.12);
+}
+.voiceDataBtnIcon { font-size: 26px; flex-shrink: 0; }
+.voiceDataBtnText { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.voiceDataBtnTitle { font-size: 16px; font-weight: 700; color: var(--gold-light); }
+.voiceDataBtnSub { font-size: 12px; color: var(--text-muted); }
+
+.voiceDataContent { display: flex; flex-direction: column; gap: 20px; }
