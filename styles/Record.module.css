@@ -997,7 +997,7 @@
   margin-left: 25px;
 }
 .teacherExerciseBtn:hover { background: var(--gold-dim); }
-detailToggleBtn {
+.detailToggleBtn {
   background: transparent;
   border: 1px solid currentColor;
   color: inherit;
