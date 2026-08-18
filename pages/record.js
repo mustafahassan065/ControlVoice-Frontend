@@ -178,7 +178,7 @@ function TeacherBox({ explanation, onExerciseClick }) {
         <p className={styles.teacherBoxText}>{explanation.text}</p>
       </div>
       <div className={styles.teacherBoxTip}>
-        <span>💡 Coach tip:</span> {explanation.tip}
+        <span>🎓 AI Voice Coach:</span> {explanation.tip}
       </div>
       {explanation.exercise && (
         <button className={styles.teacherExerciseBtn} onClick={() => onExerciseClick(explanation.exercise)}>
@@ -212,6 +212,7 @@ export default function Record() {
   const [assigningProgram, setAssigningProgram] = useState(false);
   const [programAssigned, setProgramAssigned] = useState(false);
   const [weakestCategory, setWeakestCategory] = useState(null);
+  const [openDetails, setOpenDetails] = useState({});
   const [challengeId, setChallengeId] = useState(null);
   const [challengePrompt, setChallengePrompt] = useState(null);
   const [newPersonalBests, setNewPersonalBests] = useState([]);
@@ -393,6 +394,10 @@ export default function Record() {
 
   function goToExercise(category) {
     router.push(`/exercises?category=${category}`);
+  }
+
+  function toggleDetail(key) {
+    setOpenDetails(prev => ({ ...prev, [key]: !prev[key] }));
   }
 
   const fmt = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
@@ -590,7 +595,7 @@ export default function Record() {
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
-              <TeacherBox explanation={waveformExpl} onExerciseClick={goToExercise} />
+              <TeacherBox explanation={waveformExpl} onExerciseClick={goToExercise} sectionKey="waveform" openDetails={openDetails} onToggle={toggleDetail} />
             </div>
 
             {/* PITCH CURVE */}
@@ -627,7 +632,7 @@ export default function Record() {
                 </span>
                 <span className={styles.praatRange}>Range: {analysisData.pitch_range_hz} Hz</span>
               </div>
-              <TeacherBox explanation={pitchExpl} onExerciseClick={goToExercise} />
+              <TeacherBox explanation={pitchExpl} onExerciseClick={goToExercise} sectionKey="pitch" openDetails={openDetails} onToggle={toggleDetail} />
             </div>
 
             {/* PAUSE SEGMENTS */}
@@ -679,7 +684,7 @@ export default function Record() {
                   </span>
                 </div>
               </div>
-              <TeacherBox explanation={pauseExpl} onExerciseClick={goToExercise} />
+              <TeacherBox explanation={pauseExpl} onExerciseClick={goToExercise} sectionKey="pause" openDetails={openDetails} onToggle={toggleDetail} />
             </div>
 
             {/* SPEAKING RATE */}
@@ -718,7 +723,7 @@ export default function Record() {
                   {analysisData.wpm_status === 'too_slow' && '⚠️ Too slow'}
                 </span>
               </div>
-              <TeacherBox explanation={wpmExpl} onExerciseClick={goToExercise} />
+              <TeacherBox explanation={wpmExpl} onExerciseClick={goToExercise} sectionKey="wpm" openDetails={openDetails} onToggle={toggleDetail} />
             </div>
 
             {/* FILLER WORDS */}
@@ -738,7 +743,7 @@ export default function Record() {
                     </div>
                   ))}
                 </div>
-                <TeacherBox explanation={fillerExpl} onExerciseClick={goToExercise} />
+                <TeacherBox explanation={fillerExpl} onExerciseClick={goToExercise} sectionKey="filler" openDetails={openDetails} onToggle={toggleDetail} />
               </div>
             )}
           </div>
