@@ -501,6 +501,7 @@
 
 .voiceDataContent { display: flex; flex-direction: column; gap: 20px; }
 /* ========== LIVE COACH CARD ========== */
+/* ========== LIVE COACH CARD ========== */
 .liveCoachCard {
   width: 100%;
   background: linear-gradient(180deg, var(--navy-2) 0%, rgba(10, 15, 30, 0.95) 100%);
@@ -559,11 +560,11 @@
   text-transform: uppercase;
 }
 
-/* --- Image Section --- */
+/* --- Image Section (SHORTER) --- */
 .liveCoachImageWrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 6.5;
   overflow: hidden;
 }
 
@@ -585,24 +586,39 @@
   background: linear-gradient(
     180deg,
     rgba(10, 15, 30, 0.1) 0%,
-    rgba(10, 15, 30, 0.4) 60%,
+    rgba(10, 15, 30, 0.3) 60%,
     var(--navy-2) 100%
   );
   pointer-events: none;
 }
 
-/* --- Card Body / Button Content --- */
+/* --- Card Body / BUTTON BAR --- */
 .liveCoachCardBody {
-  padding: 16px 20px 18px;
+  padding: 14px 20px;
   display: flex;
   align-items: center;
   gap: 14px;
+  background: linear-gradient(135deg, rgba(201, 168, 76, 0.08), rgba(201, 168, 76, 0.02));
+  border-top: 1px solid var(--gold-border);
+  position: relative;
+}
+
+/* Button bar shine effect */
+.liveCoachCardBody::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.5;
 }
 
 .liveCoachBtnText {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   flex: 1;
 }
 
@@ -628,4 +644,8 @@
 
 .liveCoachCard:hover .liveCoachBtnArrow {
   transform: translateX(4px);
+}
+
+.liveCoachCard:hover .liveCoachCardBody {
+  background: linear-gradient(135deg, rgba(201, 168, 76, 0.12), rgba(201, 168, 76, 0.04));
 }
