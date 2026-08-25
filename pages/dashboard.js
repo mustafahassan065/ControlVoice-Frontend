@@ -255,15 +255,33 @@ export default function Dashboard() {
           </div>
         )}
         {/* LIVE AI COACH BUTTON */}
-<div className={styles.liveCoachBtnWrap}>
-  <button className={styles.liveCoachBtn} onClick={() => router.push('/live-coach')}>
-    <span className={styles.liveCoachBtnIcon}>🎓</span>
+<div className={styles.liveCoachCard} onClick={() => router.push('/live-coach')}>
+  {/* LIVE Badge */}
+  <div className={styles.liveCoachBadge}>
+    <span className={styles.liveCoachBadgeDot}></span>
+    <span className={styles.liveCoachBadgeText}>LIVE VIDEO CALL</span>
+  </div>
+
+  {/* Dominant Image */}
+  <div className={styles.liveCoachImageWrap}>
+    <img 
+      src="/Reha.jpeg" 
+      alt="AI Voice Coach" 
+      className={styles.liveCoachImage}
+    />
+    <div className={styles.liveCoachImageOverlay}></div>
+  </div>
+
+  {/* Button Content */}
+  <div className={styles.liveCoachCardBody}>
     <div className={styles.liveCoachBtnText}>
       <span className={styles.liveCoachBtnTitle}>Talk to Your AI Voice Coach</span>
-      <span className={styles.liveCoachBtnSub}>Live session — coach knows your scores and weaknesses</span>
+      <span className={styles.liveCoachBtnSub}>
+        Live session — coach knows your scores and weaknesses
+      </span>
     </div>
     <span className={styles.liveCoachBtnArrow}>→</span>
-  </button>
+  </div>
 </div>
 
         {/* ═══ PRIMARY: WHAT SHOULD I TRAIN TODAY? ═══ */}
