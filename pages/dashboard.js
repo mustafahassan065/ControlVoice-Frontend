@@ -254,6 +254,17 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+        {/* LIVE AI COACH BUTTON */}
+<div className={styles.liveCoachBtnWrap}>
+  <button className={styles.liveCoachBtn} onClick={() => router.push('/live-coach')}>
+    <span className={styles.liveCoachBtnIcon}>🎓</span>
+    <div className={styles.liveCoachBtnText}>
+      <span className={styles.liveCoachBtnTitle}>Talk to Your AI Voice Coach</span>
+      <span className={styles.liveCoachBtnSub}>Live session — coach knows your scores and weaknesses</span>
+    </div>
+    <span className={styles.liveCoachBtnArrow}>→</span>
+  </button>
+</div>
 
         {/* ═══ PRIMARY: WHAT SHOULD I TRAIN TODAY? ═══ */}
         <div className={styles.trainTodaySection}>

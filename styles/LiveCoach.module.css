@@ -1,0 +1,53 @@
+.page { min-height: 100vh; background: var(--navy); display: flex; flex-direction: column; }
+.navbar { background: rgba(10,14,26,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border-sub); position: sticky; top: 0; z-index: 100; }
+.navInner { max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.logoIcon { width: 30px; height: 30px; background: var(--gold-dim); border: 1px solid var(--gold-border); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--gold); }
+.logoText { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--white); }
+.logoText span { color: var(--gold); }
+.navRight { display: flex; gap: 10px; }
+.btnGhost { background: transparent; border: 1px solid var(--border-sub); color: var(--text-dim); padding: 7px 16px; font-size: 13px; border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-body); transition: all 0.2s; }
+.btnGhost:hover { border-color: rgba(255,255,255,0.2); color: var(--white); }
+.btnEnd { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: #F87171; padding: 7px 16px; font-size: 13px; border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-body); transition: all 0.2s; }
+.btnEnd:hover { background: rgba(248,113,113,0.2); }
+
+.main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 32px 24px; }
+
+/* START SCREEN */
+.startScreen { width: 100%; max-width: 600px; }
+.startCard { background: var(--navy-2); border: 1px solid var(--border-sub); border-radius: var(--radius-md); padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 32px; }
+.avatarPreview { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.avatarRing { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, rgba(201,168,76,0.2), rgba(201,168,76,0.05)); border: 2px solid var(--gold-border); display: flex; align-items: center; justify-content: center; font-size: 40px; }
+.avatarStatus { display: flex; align-items: center; gap: 8px; }
+.statusDot { width: 8px; height: 8px; border-radius: 50%; background: #4ADE80; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+.statusText { font-size: 13px; color: #4ADE80; font-weight: 500; }
+
+.startInfo { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; width: 100%; }
+.eyebrow { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin: 0; }
+.heading { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--white); margin: 0; }
+.sub { font-size: 14px; color: var(--text-muted); line-height: 1.7; margin: 0; max-width: 460px; }
+
+.featureList { display: flex; flex-direction: column; gap: 10px; width: 100%; text-align: left; }
+.featureItem { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-sub); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; color: var(--text-dim); }
+
+.errorBox { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: #F87171; padding: 12px 16px; border-radius: var(--radius-sm); font-size: 13px; width: 100%; }
+
+.startBtn { background: var(--gold); border: none; color: #0A0E1A; padding: 14px 32px; border-radius: var(--radius-sm); font-size: 16px; font-weight: 700; cursor: pointer; font-family: var(--font-body); transition: background 0.2s; display: flex; align-items: center; gap: 10px; width: 100%; justify-content: center; }
+.startBtn:hover:not(:disabled) { background: var(--gold-light); }
+.startBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+.hint { font-size: 12px; color: var(--text-muted); margin: 0; }
+
+/* SESSION SCREEN */
+.sessionScreen { width: 100%; max-width: 900px; display: flex; flex-direction: column; gap: 20px; }
+.sessionHeader { text-align: center; }
+.sessionLive { display: inline-flex; align-items: center; gap: 8px; background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); border-radius: 20px; padding: 5px 14px; font-size: 13px; color: #4ADE80; font-weight: 600; margin-bottom: 8px; }
+.liveDot { width: 7px; height: 7px; border-radius: 50%; background: #4ADE80; animation: pulse 1.5s infinite; }
+.sessionSub { font-size: 13px; color: var(--text-muted); margin: 0; }
+.iframeWrap { width: 100%; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-sub); background: #000; aspect-ratio: 16/9; }
+.coachIframe { width: 100%; height: 100%; border: none; display: block; min-height: 500px; }
+.sessionTips { text-align: center; font-size: 12px; color: var(--text-muted); background: rgba(255,255,255,0.03); border: 1px solid var(--border-sub); border-radius: var(--radius-sm); padding: 10px 16px; }
+
+.spinner { width: 32px; height: 32px; border: 3px solid rgba(201,168,76,0.2); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
+.spinnerSmall { width: 16px; height: 16px; border: 2px solid rgba(10,14,26,0.3); border-top-color: #0A0E1A; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
