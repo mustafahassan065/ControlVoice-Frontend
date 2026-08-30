@@ -43,3 +43,57 @@
 .sandboxNote span { font-size: 18px; }
 .sandboxNote p { font-size: 13px; color: var(--text-muted); }
 .sandboxNote strong { color: var(--white); }
+/* Add these to Pricing.module.css */
+
+.planCardExecutive {
+  border-color: #9B5CF6 !important;
+  background: rgba(155,92,246,0.04);
+}
+
+.executiveBanner {
+  background: linear-gradient(135deg, rgba(155,92,246,0.2), rgba(155,92,246,0.08));
+  border: 1px solid rgba(155,92,246,0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #C084FC;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.featureHighlight {
+  background: rgba(155,92,246,0.08);
+  border: 1px solid rgba(155,92,246,0.2);
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin: 4px 0;
+}
+
+.featureLocked {
+  opacity: 0.6;
+}
+
+.lockedTag {
+  display: inline-block;
+  font-size: 10px;
+  background: rgba(155,92,246,0.15);
+  color: #C084FC;
+  border-radius: 10px;
+  padding: 1px 7px;
+  margin-left: 6px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.newTag {
+  display: inline-block;
+  font-size: 10px;
+  background: rgba(155,92,246,0.2);
+  color: #C084FC;
+  border-radius: 10px;
+  padding: 1px 7px;
+  margin-left: 6px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}

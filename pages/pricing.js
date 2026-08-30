@@ -16,6 +16,7 @@ const PLANS = [
       { text: 'Progress tracking', included: false },
       { text: 'Weekly reports', included: false },
       { text: 'Training programs', included: false },
+      { text: 'Live AI Coach', included: false, locked: true },
     ],
     cta: 'Current Plan',
     featured: false,
@@ -33,6 +34,7 @@ const PLANS = [
       { text: 'Weekly progress reports', included: true },
       { text: 'All 4 training programs', included: true },
       { text: 'AI coaching feedback', included: true },
+      { text: 'Live AI Coach', included: false, locked: true },
     ],
     cta: 'Upgrade to Pro',
     featured: true,
@@ -45,14 +47,15 @@ const PLANS = [
     color: 'var(--purple)',
     features: [
       { text: 'Everything in Pro', included: true },
+      { text: 'Live AI Coach — face-to-face sessions', included: true, highlight: true },
       { text: 'Executive Presence Program', included: true },
       { text: 'Advanced analytics', included: true },
       { text: 'Priority support', included: true },
-      { text: '1-on-1 coaching session', included: true },
       { text: 'Custom exercise program', included: true },
     ],
     cta: 'Go Executive',
     featured: false,
+    highlight: true,
   },
 ];
 
@@ -144,9 +147,14 @@ export default function Pricing() {
             return (
               <div
                 key={plan.id}
-                className={`${styles.planCard} ${plan.featured ? styles.planCardFeatured : ''}`}
-                style={plan.featured ? { borderColor: plan.color } : {}}
+                className={`${styles.planCard} ${plan.featured ? styles.planCardFeatured : ''} ${plan.highlight ? styles.planCardExecutive : ''}`}
+                style={plan.featured ? { borderColor: plan.color } : plan.highlight ? { borderColor: 'var(--purple, #9B5CF6)' } : {}}
               >
+                {plan.highlight && (
+                  <div className={styles.executiveBanner}>
+                    🎓 Includes Live AI Voice Coach
+                  </div>
+                )}
                 {plan.featured && (
                   <div className={styles.featuredBadge}>Most Popular</div>
                 )}
@@ -162,12 +170,14 @@ export default function Pricing() {
 
                 <ul className={styles.featureList}>
                   {plan.features.map((f, i) => (
-                    <li key={i} className={styles.featureItem}>
+                    <li key={i} className={`${styles.featureItem} ${f.highlight ? styles.featureHighlight : ''} ${f.locked ? styles.featureLocked : ''}`}>
                       <span style={{ color: f.included ? 'var(--green)' : 'var(--text-muted)' }}>
-                        {f.included ? '✓' : '×'}
+                        {f.locked ? '🔒' : f.included ? '✓' : '×'}
                       </span>
-                      <span style={{ color: f.included ? 'var(--text-dim)' : 'var(--text-muted)' }}>
+                      <span style={{ color: f.highlight ? 'var(--purple-light, #C084FC)' : f.included ? 'var(--text-dim)' : 'var(--text-muted)' }}>
                         {f.text}
+                        {f.locked && <span className={styles.lockedTag}>Executive only</span>}
+                        {f.highlight && <span className={styles.newTag}>New</span>}
                       </span>
                     </li>
                   ))}
