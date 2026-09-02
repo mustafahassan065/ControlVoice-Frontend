@@ -165,10 +165,18 @@ function StorySection({ onSignup }) {
             <div className={styles.storyCenter}>
               <div className={styles.storyCenterGlow} />
               <div className={styles.storyCenterAvatar}>
-                {/* Avatar image — same as dashboard */}
                 <div className={styles.storyCenterAvatarRing} />
                 <div className={styles.storyCenterAvatarRing2} />
-                <div className={styles.storyCenterAvatarIcon}>🎓</div>
+                <img
+                  src="/Reha.jpeg"
+                  alt="AI Voice Coach"
+                  style={{
+                    width: '72px', height: '72px', borderRadius: '50%',
+                    objectFit: 'cover', objectPosition: 'top',
+                    border: '2px solid rgba(201,168,76,0.4)',
+                    position: 'relative', zIndex: 1,
+                  }}
+                />
               </div>
               <p className={styles.storyCenterLabel}>Voice Control AI</p>
               <Waveform active bars={8} />
