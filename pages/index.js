@@ -36,6 +36,178 @@ function FadeSection({ children, className = '' }) {
   return <div ref={ref} className={`${styles.fadeSection} ${className}`}>{children}</div>;
 }
 
+// ── Story data ──────────────────────────────────────────────
+const STORIES = [
+  {
+    id: 'interview',
+    tag: 'Job Interview',
+    problem: 'Fails every interview. Speaks too fast, loses confidence under pressure.',
+    problemIcon: '😰',
+    result: 'Lands the role. Walks in composed, speaks with authority.',
+    resultIcon: '🏆',
+    metric: 'Authority Score',
+    before: 42,
+    after: 89,
+  },
+  {
+    id: 'ielts',
+    tag: 'IELTS Speaking',
+    problem: 'IELTS speaking band 5.5. Struggles with fluency and natural pace.',
+    problemIcon: '📉',
+    result: 'Achieves band 7.5. Clear, confident, naturally fluent.',
+    resultIcon: '🎓',
+    metric: 'Fluency Score',
+    before: 55,
+    after: 88,
+  },
+  {
+    id: 'leadership',
+    tag: 'Leadership',
+    problem: 'Speaks softly in meetings. Ideas get ignored or talked over.',
+    problemIcon: '🤐',
+    result: 'Commands the room. Every sentence lands with conviction.',
+    resultIcon: '💼',
+    metric: 'Presence Score',
+    before: 38,
+    after: 92,
+  },
+  {
+    id: 'presentations',
+    tag: 'Presentations',
+    problem: 'Nervous on stage. Rushes through slides, loses the audience.',
+    problemIcon: '😓',
+    result: 'Delivers with calm authority. Audience stays engaged.',
+    resultIcon: '🎯',
+    metric: 'Confidence Score',
+    before: 45,
+    after: 86,
+  },
+];
+
+// ── Animated counter ────────────────────────────────────────
+function Counter({ from, to, active }) {
+  const [val, setVal] = useState(from);
+  useEffect(() => {
+    if (!active) { setVal(from); return; }
+    let start = null;
+    const duration = 1200;
+    const step = (ts) => {
+      if (!start) start = ts;
+      const progress = Math.min((ts - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      setVal(Math.round(from + (to - from) * ease));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [active, from, to]);
+  return <span>{val}</span>;
+}
+
+// ── Story Section ───────────────────────────────────────────
+function StorySection({ onSignup }) {
+  const [active, setActive] = useState(0);
+  const [counting, setCounting] = useState(false);
+  const story = STORIES[active];
+
+  // Auto-rotate every 4s
+  useEffect(() => {
+    const t = setInterval(() => {
+      setActive(prev => (prev + 1) % STORIES.length);
+      setCounting(false);
+    }, 4000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Trigger counter after story switches
+  useEffect(() => {
+    const t = setTimeout(() => setCounting(true), 400);
+    return () => clearTimeout(t);
+  }, [active]);
+
+  return (
+    <section className={styles.storySection}>
+      <FadeSection className={styles.sectionWrap}>
+        <p className={styles.eyebrow}>Real Results</p>
+        <h2 className={styles.sectionHeading}>See the transformation</h2>
+
+        {/* Tab selectors */}
+        <div className={styles.storyTabs}>
+          {STORIES.map((s, i) => (
+            <button
+              key={s.id}
+              className={`${styles.storyTab} ${i === active ? styles.storyTabActive : ''}`}
+              onClick={() => { setActive(i); setCounting(false); }}
+            >
+              {s.tag}
+            </button>
+          ))}
+        </div>
+
+        {/* Story cards */}
+        <div className={styles.storyGrid}>
+
+          {/* PROBLEM */}
+          <div className={styles.storyCard} style={{ borderColor: 'rgba(248,113,113,0.3)', background: 'rgba(248,113,113,0.04)' }}>
+            <div className={styles.storyCardTag} style={{ color: '#F87171', background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)' }}>
+              THE PROBLEM
+            </div>
+            <div className={styles.storyEmoji}>{story.problemIcon}</div>
+            <p className={styles.storyTag}>{story.tag}</p>
+            <p className={styles.storyText}>{story.problem}</p>
+            <div className={styles.storyScore} style={{ color: '#F87171' }}>
+              {story.metric}: <strong><Counter from={story.before} to={story.before} active={false} />/100</strong>
+            </div>
+          </div>
+
+          {/* CENTER — Voice Control AI */}
+          <div className={styles.storyCenterCol}>
+            <div className={styles.storyArrow}>→</div>
+            <div className={styles.storyCenter}>
+              <div className={styles.storyCenterGlow} />
+              <div className={styles.storyCenterAvatar}>
+                {/* Avatar image — same as dashboard */}
+                <div className={styles.storyCenterAvatarRing} />
+                <div className={styles.storyCenterAvatarRing2} />
+                <div className={styles.storyCenterAvatarIcon}>🎓</div>
+              </div>
+              <p className={styles.storyCenterLabel}>Voice Control AI</p>
+              <Waveform active bars={8} />
+              <p className={styles.storyCenterSub}>Analyzing · Coaching · Adapting</p>
+            </div>
+            <div className={styles.storyArrow}>→</div>
+          </div>
+
+          {/* RESULT */}
+          <div className={styles.storyCard} style={{ borderColor: 'rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.04)' }}>
+            <div className={styles.storyCardTag} style={{ color: '#4ADE80', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)' }}>
+              THE RESULT
+            </div>
+            <div className={styles.storyEmoji}>{story.resultIcon}</div>
+            <p className={styles.storyTag}>{story.tag}</p>
+            <p className={styles.storyText}>{story.result}</p>
+            <div className={styles.storyScore} style={{ color: '#4ADE80' }}>
+              {story.metric}: <strong><Counter from={story.before} to={story.after} active={counting} />/100</strong>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Progress bar */}
+        <div className={styles.storyProgress}>
+          {STORIES.map((_, i) => (
+            <div key={i} className={`${styles.storyDot} ${i === active ? styles.storyDotActive : ''}`} onClick={() => { setActive(i); setCounting(false); }} />
+          ))}
+        </div>
+
+        <button className={styles.heroCta} onClick={onSignup} style={{ marginTop: '40px' }}>
+          <span className={styles.heroCtaGlow} />
+          Start My Transformation
+        </button>
+      </FadeSection>
+    </section>
+  );
+}
+
 // ── Main component ──────────────────────────────────────────
 export default function Home() {
   const router = useRouter();
@@ -426,27 +598,8 @@ export default function Home() {
         </FadeSection>
       </section>
 
-      {/* ── AVATAR CTA ── */}
-      <section className={styles.avatarSection}>
-        <FadeSection className={styles.avatarInner}>
-          <div className={styles.avatarGlow} />
-          <p className={styles.eyebrow} style={{ color: 'rgba(255,255,255,0.5)' }}>Live AI Voice Coach</p>
-          <h2 className={styles.avatarHeading}>Talk to your coach. Right now.</h2>
-          <p className={styles.avatarSub}>
-            Your AI Voice Coach already knows your scores, your weaknesses, and your goals.
-            Just speak — it listens, responds, and guides you live.
-          </p>
-          <div className={styles.avatarPulse}>
-            <div className={styles.avatarRing} />
-            <div className={styles.avatarRing2} />
-            <div className={styles.avatarIcon}>🎓</div>
-          </div>
-          <button className={styles.heroCta} onClick={() => router.push('/signup')} style={{ marginTop: '32px' }}>
-            <span className={styles.heroCtaGlow} />
-            Meet Your AI Coach
-          </button>
-        </FadeSection>
-      </section>
+      {/* ── STORY SECTION ── */}
+      <StorySection onSignup={() => router.push('/signup')} />
 
       {/* ── PRODUCT PREVIEW ── */}
       <section className={styles.productSection}>
