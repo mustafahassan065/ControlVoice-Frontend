@@ -181,6 +181,12 @@ function StorySection({ onSignup }) {
               <p className={styles.storyCenterLabel}>Voice Control AI</p>
               <Waveform active bars={8} />
               <p className={styles.storyCenterSub}>Analyzing · Coaching · Adapting</p>
+              <button
+                className={styles.storyCenterCta}
+                onClick={onSignup}
+              >
+                Talk to AI Voice Coach →
+              </button>
             </div>
             <div className={styles.storyArrow}>→</div>
           </div>

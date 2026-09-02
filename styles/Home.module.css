@@ -366,6 +366,16 @@
 }
 .storyCenterLabel { font-size: 13px; font-weight: 700; color: var(--gold-light); letter-spacing: 0.04em; position: relative; z-index: 1; }
 .storyCenterSub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.06em; position: relative; z-index: 1; text-align: center; }
+.storyCenterCta {
+  background: var(--gold); color: #080C18; border: none;
+  padding: 8px 16px; border-radius: 20px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  font-family: var(--font-body); letter-spacing: 0.04em;
+  position: relative; z-index: 1;
+  transition: transform 0.2s, box-shadow 0.2s;
+  white-space: nowrap;
+}
+.storyCenterCta:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(201,168,76,0.3); }
 
 /* PROGRESS DOTS */
 .storyProgress { display: flex; gap: 8px; justify-content: center; }
