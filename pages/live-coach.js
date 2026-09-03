@@ -45,7 +45,16 @@ export default function LiveCoach() {
     }
   }
 
-  function endSession() {
+  async function endSession() {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/live-coach/end-session`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (err) {
+      console.error('End session error:', err);
+    }
     setConversationUrl(null);
     setSessionActive(false);
   }
