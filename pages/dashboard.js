@@ -48,6 +48,9 @@ export default function Dashboard() {
   const [todaySessions, setTodaySessions] = useState([]);
   const [weakestCategory, setWeakestCategory] = useState(null);
 
+  // Rina Voice Profile
+  const [voiceProfile, setVoiceProfile] = useState(null);
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) { router.push('/login'); return; }
@@ -76,6 +79,7 @@ export default function Dashboard() {
       fetchComparison(token, u.id),
       fetchPersonalBests(token, u.id),
       fetchTodaySessions(token),
+      fetchVoiceProfile(token),
     ]).finally(() => setLoading(false));
   }, [router.query]);
 
@@ -148,6 +152,16 @@ export default function Dashboard() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/training/today`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (res.ok) setTodaySessions(data.sessions || []);
+    } catch (err) { console.error(err); }
+  }
+
+  async function fetchVoiceProfile(token) {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/live-coach/voice-profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && (data.current_focus || data.rina_observation)) setVoiceProfile(data);
     } catch (err) { console.error(err); }
   }
 
@@ -283,6 +297,61 @@ export default function Dashboard() {
     <span className={styles.liveCoachBtnArrow}>→</span>
   </div>
 </div>
+
+        {/* ═══ RINA VOICE PROFILE ═══ */}
+        {voiceProfile && (
+          <div className={styles.voiceProfileCard}>
+            <div className={styles.voiceProfileHeader}>
+              <div className={styles.voiceProfileAvatar}>
+                <img src="/Reha.jpeg" alt="Rina" className={styles.voiceProfileAvatarImg} />
+              </div>
+              <div>
+                <p className={styles.eyebrow}>Your Voice Profile</p>
+                <h3 className={styles.voiceProfileTitle}>Rina knows where you are</h3>
+              </div>
+            </div>
+            <div className={styles.voiceProfileGrid}>
+              {voiceProfile.current_focus && (
+                <div className={styles.voiceProfileItem}>
+                  <span className={styles.voiceProfileItemLabel}>Current Focus</span>
+                  <span className={styles.voiceProfileItemValue}>{voiceProfile.current_focus}</span>
+                </div>
+              )}
+              {voiceProfile.next_focus && (
+                <div className={styles.voiceProfileItem}>
+                  <span className={styles.voiceProfileItemLabel}>Next Goal</span>
+                  <span className={styles.voiceProfileItemValue}>{voiceProfile.next_focus}</span>
+                </div>
+              )}
+              {voiceProfile.strongest_improvement && (
+                <div className={styles.voiceProfileItem}>
+                  <span className={styles.voiceProfileItemLabel}>Strongest Improvement</span>
+                  <span className={styles.voiceProfileItemValue} style={{ color: 'var(--green)' }}>{voiceProfile.strongest_improvement}</span>
+                </div>
+              )}
+              {voiceProfile.rina_observation && (
+                <div className={styles.voiceProfileItemFull}>
+                  <span className={styles.voiceProfileItemLabel}>Rina noticed</span>
+                  <span className={styles.voiceProfileItemValue} style={{ fontStyle: 'italic' }}>"{voiceProfile.rina_observation}"</span>
+                </div>
+              )}
+            </div>
+            {voiceProfile.recent_sessions?.length > 0 && (
+              <div className={styles.voiceProfileSessions}>
+                <p className={styles.voiceProfileSessionsLabel}>Recent Sessions</p>
+                {voiceProfile.recent_sessions.map((s, i) => (
+                  <div key={i} className={styles.voiceProfileSession}>
+                    <span className={styles.voiceProfileSessionDate}>{s.date}</span>
+                    <span className={styles.voiceProfileSessionFocus}>{s.focus}</span>
+                    {s.improvement && s.improvement !== 'None' && (
+                      <span className={styles.voiceProfileSessionImprovement}>{s.improvement}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ═══ PRIMARY: WHAT SHOULD I TRAIN TODAY? ═══ */}
         <div className={styles.trainTodaySection}>

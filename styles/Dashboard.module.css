@@ -649,3 +649,131 @@
 .liveCoachCard:hover .liveCoachCardBody {
   background: linear-gradient(135deg, rgba(201, 168, 76, 0.12), rgba(201, 168, 76, 0.04));
 }
+
+/* Add to Dashboard.module.css */
+
+/* ── VOICE PROFILE CARD ─────────────────────── */
+.voiceProfileCard {
+  background: var(--navy-2);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.voiceProfileHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.voiceProfileAvatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--gold-border);
+  flex-shrink: 0;
+}
+
+.voiceProfileAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
+.voiceProfileTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--white);
+  margin: 4px 0 0;
+}
+
+.voiceProfileGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.voiceProfileItem {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-sub);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.voiceProfileItemFull {
+  grid-column: 1 / -1;
+  background: rgba(201,168,76,0.05);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.voiceProfileItemLabel {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.voiceProfileItemValue {
+  font-size: 14px;
+  color: var(--gold-light);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.voiceProfileSessions {
+  border-top: 1px solid var(--border-sub);
+  padding-top: 14px;
+}
+
+.voiceProfileSessionsLabel {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.voiceProfileSession {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 13px;
+}
+
+.voiceProfileSessionDate {
+  color: var(--text-muted);
+  min-width: 90px;
+  font-size: 12px;
+}
+
+.voiceProfileSessionFocus {
+  color: var(--text-dim);
+  flex: 1;
+}
+
+.voiceProfileSessionImprovement {
+  font-size: 11px;
+  color: var(--green);
+  background: rgba(74,222,128,0.1);
+  border: 1px solid rgba(74,222,128,0.2);
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-weight: 600;
+}
