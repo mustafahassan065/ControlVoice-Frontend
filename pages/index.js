@@ -2,105 +2,160 @@ import { useRouter } from 'next/router';
 import { useState, useEffect, useRef } from 'react';
 import styles from '../styles/Home.module.css';
 
-// ── Animated waveform bars ──────────────────────────────────
-function Waveform({ active = false, bars = 12 }) {
+// ── Waveform ────────────────────────────────────────────────
+function Waveform({ active = false, bars = 12, color = '#C9A84C' }) {
   return (
     <div className={styles.waveform} aria-hidden="true">
       {Array.from({ length: bars }).map((_, i) => (
-        <span
-          key={i}
-          className={active ? styles.waveBarActive : styles.waveBar}
-          style={{ '--i': i, '--bars': bars }}
-        />
+        <span key={i} className={active ? styles.waveBarActive : styles.waveBar}
+          style={{ '--i': i, '--bars': bars, '--wcolor': color }} />
       ))}
     </div>
   );
 }
 
-// ── Scroll fade-in hook ─────────────────────────────────────
+// ── Scroll fade ─────────────────────────────────────────────
 function useFadeIn(ref) {
   useEffect(() => {
     if (!ref.current) return;
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) e.target.classList.add(styles.visible); },
-      { threshold: 0.12 }
+      { threshold: 0.1 }
     );
     obs.observe(ref.current);
     return () => obs.disconnect();
   }, []);
 }
-
 function FadeSection({ children, className = '' }) {
   const ref = useRef(null);
   useFadeIn(ref);
   return <div ref={ref} className={`${styles.fadeSection} ${className}`}>{children}</div>;
 }
 
-// ── Story data ──────────────────────────────────────────────
-const STORIES = [
-  {
-    id: 'interview',
-    tag: 'Job Interview',
-    problem: 'Fails every interview. Speaks too fast, loses confidence under pressure.',
-    problemIcon: '😰',
-    result: 'Lands the role. Walks in composed, speaks with authority.',
-    resultIcon: '🏆',
-    metric: 'Authority Score',
-    before: 42,
-    after: 89,
-  },
-  {
-    id: 'ielts',
-    tag: 'IELTS Speaking',
-    problem: 'IELTS speaking band 5.5. Struggles with fluency and natural pace.',
-    problemIcon: '📉',
-    result: 'Achieves band 7.5. Clear, confident, naturally fluent.',
-    resultIcon: '🎓',
-    metric: 'Fluency Score',
-    before: 55,
-    after: 88,
-  },
-  {
-    id: 'leadership',
-    tag: 'Leadership',
-    problem: 'Speaks softly in meetings. Ideas get ignored or talked over.',
-    problemIcon: '🤐',
-    result: 'Commands the room. Every sentence lands with conviction.',
-    resultIcon: '💼',
-    metric: 'Presence Score',
-    before: 38,
-    after: 92,
-  },
-  {
-    id: 'presentations',
-    tag: 'Presentations',
-    problem: 'Nervous on stage. Rushes through slides, loses the audience.',
-    problemIcon: '😓',
-    result: 'Delivers with calm authority. Audience stays engaged.',
-    resultIcon: '🎯',
-    metric: 'Confidence Score',
-    before: 45,
-    after: 86,
-  },
-];
-
 // ── Animated counter ────────────────────────────────────────
-function Counter({ from, to, active }) {
+function Counter({ from, to, active, suffix = '' }) {
   const [val, setVal] = useState(from);
   useEffect(() => {
     if (!active) { setVal(from); return; }
     let start = null;
-    const duration = 1200;
     const step = (ts) => {
       if (!start) start = ts;
-      const progress = Math.min((ts - start) / duration, 1);
-      const ease = 1 - Math.pow(1 - progress, 3);
-      setVal(Math.round(from + (to - from) * ease));
-      if (progress < 1) requestAnimationFrame(step);
+      const p = Math.min((ts - start) / 1400, 1);
+      const e = 1 - Math.pow(1 - p, 3);
+      setVal(Math.round(from + (to - from) * e));
+      if (p < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
   }, [active, from, to]);
-  return <span>{val}</span>;
+  return <span>{val}{suffix}</span>;
+}
+
+// ── Typing text ─────────────────────────────────────────────
+function TypeText({ text, active, delay = 0, speed = 38 }) {
+  const [shown, setShown] = useState('');
+  useEffect(() => {
+    if (!active) { setShown(''); return; }
+    let i = 0;
+    const t = setTimeout(() => {
+      const interval = setInterval(() => {
+        i++;
+        setShown(text.slice(0, i));
+        if (i >= text.length) clearInterval(interval);
+      }, speed);
+      return () => clearInterval(interval);
+    }, delay);
+    return () => clearTimeout(t);
+  }, [active, text, delay, speed]);
+  return <span>{shown}<span className={styles.cursor}>|</span></span>;
+}
+
+// ── Stories ─────────────────────────────────────────────────
+const STORIES = [
+  { id: 'interview', tag: 'Job Interview', problem: 'Fails every interview. Speaks too fast, loses confidence under pressure.', problemIcon: '😰', result: 'Lands the role. Walks in composed, speaks with authority.', resultIcon: '🏆', metric: 'Authority', before: 42, after: 89 },
+  { id: 'ielts', tag: 'IELTS Speaking', problem: 'IELTS band 5.5. Struggles with fluency and natural pace.', problemIcon: '📉', result: 'Achieves band 7.5. Clear, confident, naturally fluent.', resultIcon: '🎓', metric: 'Fluency', before: 55, after: 88 },
+  { id: 'leadership', tag: 'Leadership', problem: 'Speaks softly in meetings. Ideas get ignored or talked over.', problemIcon: '🤐', result: 'Commands the room. Every sentence lands with conviction.', resultIcon: '💼', metric: 'Presence', before: 38, after: 92 },
+  { id: 'presentations', tag: 'Presentations', problem: 'Nervous on stage. Rushes through slides, loses the audience.', problemIcon: '😓', result: 'Delivers with calm authority. Audience stays engaged.', resultIcon: '🎯', metric: 'Confidence', before: 45, after: 86 },
+];
+
+// ── Live session script ─────────────────────────────────────
+const SESSION_STEPS = [
+  { speaker: 'user', text: 'I have a job interview tomorrow morning.' },
+  { speaker: 'rina', text: 'Give me your opening answer — how you would introduce yourself.' },
+  { speaker: 'user', text: 'Hi, I am Sarah, I have five years in marketing and I—' },
+  { speaker: 'system', text: 'Analyzing...', isAnalysis: true },
+  { speaker: 'metrics', data: [{ label: 'Pace', val: 68, color: '#F87171' }, { label: 'Pause', val: 32, color: '#F87171' }, { label: 'Emphasis', val: 74, color: '#C9A84C' }] },
+  { speaker: 'rina', text: 'You sped up in the middle. Pause after "five years" — let it land. Try again.' },
+  { speaker: 'user', text: 'Hi, I am Sarah. I have five years in marketing... and I lead growth campaigns.' },
+  { speaker: 'metrics', data: [{ label: 'Pace', val: 82, color: '#4ADE80' }, { label: 'Pause', val: 78, color: '#4ADE80' }, { label: 'Emphasis', val: 85, color: '#4ADE80' }] },
+  { speaker: 'rina', text: 'Much better. The pause made that land. That is your interview voice.' },
+];
+
+function LiveSessionDemo() {
+  const [step, setStep] = useState(-1);
+  const [running, setRunning] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !running) { setRunning(true); setStep(0); }
+    }, { threshold: 0.3 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, [running]);
+
+  useEffect(() => {
+    if (step < 0 || step >= SESSION_STEPS.length) return;
+    const delays = [0, 1800, 3200, 5000, 5600, 7000, 8600, 10200, 11800];
+    const t = setTimeout(() => setStep(s => s + 1), delays[step] || 1500);
+    return () => clearTimeout(t);
+  }, [step]);
+
+  const visible = SESSION_STEPS.slice(0, step);
+
+  return (
+    <div className={styles.liveDemo} ref={ref}>
+      {visible.map((s, i) => (
+        <div key={i} className={`${styles.liveDemoMsg} ${styles[`msg_${s.speaker}`]}`}>
+          {s.speaker === 'user' && (
+            <div className={styles.msgBubble} style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.1)' }}>
+              <span className={styles.msgLabel}>You</span>
+              <p>{s.text}</p>
+            </div>
+          )}
+          {s.speaker === 'rina' && (
+            <div className={styles.msgBubble} style={{ background: 'rgba(201,168,76,0.08)', borderColor: 'rgba(201,168,76,0.25)' }}>
+              <span className={styles.msgLabel} style={{ color: '#C9A84C' }}>Rina</span>
+              <p>{s.text}</p>
+            </div>
+          )}
+          {s.speaker === 'system' && (
+            <div className={styles.msgAnalyzing}>
+              <Waveform active bars={10} />
+              <span>{s.text}</span>
+            </div>
+          )}
+          {s.speaker === 'metrics' && (
+            <div className={styles.msgMetrics}>
+              {s.data.map((m, j) => (
+                <div key={j} className={styles.metricItem}>
+                  <span className={styles.metricLabel}>{m.label}</span>
+                  <div className={styles.metricBar}>
+                    <div className={styles.metricFill} style={{ width: `${m.val}%`, background: m.color }} />
+                  </div>
+                  <span className={styles.metricVal} style={{ color: m.color }}>{m.val}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+      {step >= SESSION_STEPS.length && (
+        <button className={styles.replayBtn} onClick={() => { setStep(0); setRunning(true); }}>
+          ↺ Watch again
+        </button>
+      )}
+    </div>
+  );
 }
 
 // ── Story Section ───────────────────────────────────────────
@@ -109,16 +164,11 @@ function StorySection({ onSignup }) {
   const [counting, setCounting] = useState(false);
   const story = STORIES[active];
 
-  // Auto-rotate every 4s
   useEffect(() => {
-    const t = setInterval(() => {
-      setActive(prev => (prev + 1) % STORIES.length);
-      setCounting(false);
-    }, 4000);
+    const t = setInterval(() => { setActive(p => (p + 1) % STORIES.length); setCounting(false); }, 4000);
     return () => clearInterval(t);
   }, []);
 
-  // Trigger counter after story switches
   useEffect(() => {
     const t = setTimeout(() => setCounting(true), 400);
     return () => clearTimeout(t);
@@ -129,37 +179,21 @@ function StorySection({ onSignup }) {
       <FadeSection className={styles.sectionWrap}>
         <p className={styles.eyebrow}>Real Results</p>
         <h2 className={styles.sectionHeading}>See the transformation</h2>
-
-        {/* Tab selectors */}
         <div className={styles.storyTabs}>
           {STORIES.map((s, i) => (
-            <button
-              key={s.id}
-              className={`${styles.storyTab} ${i === active ? styles.storyTabActive : ''}`}
-              onClick={() => { setActive(i); setCounting(false); }}
-            >
-              {s.tag}
-            </button>
+            <button key={s.id} className={`${styles.storyTab} ${i === active ? styles.storyTabActive : ''}`}
+              onClick={() => { setActive(i); setCounting(false); }}>{s.tag}</button>
           ))}
         </div>
-
-        {/* Story cards */}
         <div className={styles.storyGrid}>
-
-          {/* PROBLEM */}
           <div className={styles.storyCard} style={{ borderColor: 'rgba(248,113,113,0.3)', background: 'rgba(248,113,113,0.04)' }}>
-            <div className={styles.storyCardTag} style={{ color: '#F87171', background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)' }}>
-              THE PROBLEM
-            </div>
+            <div className={styles.storyCardTag} style={{ color: '#F87171', background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)' }}>THE PROBLEM</div>
             <div className={styles.storyEmoji}>{story.problemIcon}</div>
             <p className={styles.storyTag}>{story.tag}</p>
             <p className={styles.storyText}>{story.problem}</p>
-            <div className={styles.storyScore} style={{ color: '#F87171' }}>
-              {story.metric}: <strong><Counter from={story.before} to={story.before} active={false} />/100</strong>
-            </div>
+            <div className={styles.storyScore} style={{ color: '#F87171' }}>{story.metric}: <strong>{story.before}/100</strong></div>
           </div>
 
-          {/* CENTER — Voice Control AI */}
           <div className={styles.storyCenterCol}>
             <div className={styles.storyArrow}>→</div>
             <div className={styles.storyCenter}>
@@ -167,62 +201,85 @@ function StorySection({ onSignup }) {
               <div className={styles.storyCenterAvatar}>
                 <div className={styles.storyCenterAvatarRing} />
                 <div className={styles.storyCenterAvatarRing2} />
-                <img
-                  src="/Reha.jpeg"
-                  alt="AI Voice Coach"
-                  style={{
-                    width: '72px', height: '72px', borderRadius: '50%',
-                    objectFit: 'cover', objectPosition: 'top',
-                    border: '2px solid rgba(201,168,76,0.4)',
-                    position: 'relative', zIndex: 1,
-                  }}
-                />
+                <img src="/Reha.jpeg" alt="Rina — AI Voice Coach"
+                  style={{ width: '72px', height: '72px', borderRadius: '50%', objectFit: 'cover', objectPosition: 'top', border: '2px solid rgba(201,168,76,0.4)', position: 'relative', zIndex: 1 }} />
               </div>
               <p className={styles.storyCenterLabel}>Voice Control AI</p>
               <Waveform active bars={8} />
               <p className={styles.storyCenterSub}>Analyzing · Coaching · Adapting</p>
-              <button
-                className={styles.storyCenterCta}
-                onClick={onSignup}
-              >
-                Talk to AI Voice Coach →
-              </button>
+              <button className={styles.storyCenterCta} onClick={onSignup}>Talk to Rina →</button>
             </div>
             <div className={styles.storyArrow}>→</div>
           </div>
 
-          {/* RESULT */}
           <div className={styles.storyCard} style={{ borderColor: 'rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.04)' }}>
-            <div className={styles.storyCardTag} style={{ color: '#4ADE80', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)' }}>
-              THE RESULT
-            </div>
+            <div className={styles.storyCardTag} style={{ color: '#4ADE80', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)' }}>THE RESULT</div>
             <div className={styles.storyEmoji}>{story.resultIcon}</div>
             <p className={styles.storyTag}>{story.tag}</p>
             <p className={styles.storyText}>{story.result}</p>
-            <div className={styles.storyScore} style={{ color: '#4ADE80' }}>
-              {story.metric}: <strong><Counter from={story.before} to={story.after} active={counting} />/100</strong>
-            </div>
+            <div className={styles.storyScore} style={{ color: '#4ADE80' }}>{story.metric}: <strong><Counter from={story.before} to={story.after} active={counting} />/100</strong></div>
           </div>
-
         </div>
-
-        {/* Progress bar */}
         <div className={styles.storyProgress}>
           {STORIES.map((_, i) => (
-            <div key={i} className={`${styles.storyDot} ${i === active ? styles.storyDotActive : ''}`} onClick={() => { setActive(i); setCounting(false); }} />
+            <div key={i} className={`${styles.storyDot} ${i === active ? styles.storyDotActive : ''}`}
+              onClick={() => { setActive(i); setCounting(false); }} />
           ))}
         </div>
-
         <button className={styles.heroCta} onClick={onSignup} style={{ marginTop: '40px' }}>
-          <span className={styles.heroCtaGlow} />
-          Start My Transformation
+          <span className={styles.heroCtaGlow} />Start My Transformation
         </button>
       </FadeSection>
     </section>
   );
 }
 
-// ── Main component ──────────────────────────────────────────
+// ── Progress timeline ───────────────────────────────────────
+function ProgressTimeline() {
+  const [active, setActive] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setActive(true); }, { threshold: 0.3 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+
+  const days = [
+    { day: 'Day 1', authority: 42, pace: 55, pauses: 30, label: 'Baseline set. Rina hears your voice for the first time.' },
+    { day: 'Day 7', authority: 61, pace: 70, pauses: 58, label: 'Pace improving. You are pausing more deliberately.' },
+    { day: 'Day 21', authority: 84, pace: 88, pauses: 82, label: 'Authority score up 42 points. Rina adapts to your next challenge.' },
+  ];
+
+  return (
+    <div className={styles.progressTimeline} ref={ref}>
+      {days.map((d, i) => (
+        <div key={i} className={styles.progressDay} style={{ '--delay': `${i * 0.3}s` }}>
+          <div className={styles.progressDayLabel}>{d.day}</div>
+          <div className={styles.progressBars}>
+            {[{ label: 'Authority', val: d.authority, color: '#C9A84C' },
+              { label: 'Pace', val: d.pace, color: '#2DD4BF' },
+              { label: 'Pauses', val: d.pauses, color: '#A78BFA' }].map((bar, j) => (
+              <div key={j} className={styles.progressBarRow}>
+                <span className={styles.progressBarLabel}>{bar.label}</span>
+                <div className={styles.progressBarTrack}>
+                  <div className={styles.progressBarFill}
+                    style={{ width: active ? `${bar.val}%` : '0%', background: bar.color, transitionDelay: `${i * 0.3 + j * 0.1}s` }} />
+                </div>
+                <span className={styles.progressBarVal} style={{ color: bar.color }}>
+                  {active ? <Counter from={0} to={bar.val} active={active} /> : 0}
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className={styles.progressDayNote}>{d.label}</p>
+          {i < days.length - 1 && <div className={styles.progressConnector} />}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Main ────────────────────────────────────────────────────
 export default function Home() {
   const router = useRouter();
   const [demoOpen, setDemoOpen] = useState(false);
@@ -236,10 +293,10 @@ export default function Home() {
   const [retryFeedback, setRetryFeedback] = useState(null);
   const [converted, setConverted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
+  const [heroStep, setHeroStep] = useState(0);
   const mediaRef = useRef(null);
-  const demoRef = useRef(null);
   const chunksRef = useRef([]);
+  const demoRef = useRef(null);
 
   const goals = [
     { id: 'job', label: 'Get the Job', icon: '💼' },
@@ -260,13 +317,26 @@ export default function Home() {
   };
 
   const retryFeedbacks = {
-    job: 'Better. Your pace was more controlled this time. The key points landed clearly.',
+    job: 'Better. Your pace was more controlled. The key points landed clearly.',
     leadership: 'Stronger ending. Your last sentence held its energy — that\'s the difference.',
     ielts: 'Much more consistent. Your transitions are smoother now.',
     presentations: 'Good. Fewer fillers in the second half. Keep that discipline.',
     clear: 'Your pauses now sound deliberate. That changes how people hear you.',
     confidence: 'Your pitch stayed level. That confidence reads immediately.',
   };
+
+  // Hero animation loop
+  useEffect(() => {
+    const intervals = [0, 1800, 3600, 5400, 7200, 9000];
+    const timers = intervals.map((delay, i) =>
+      setTimeout(() => setHeroStep(i), delay)
+    );
+    const reset = setTimeout(() => setHeroStep(0), 11000);
+    const loop = setInterval(() => {
+      intervals.forEach((delay, i) => setTimeout(() => setHeroStep(i), delay));
+    }, 11000);
+    return () => { timers.forEach(clearTimeout); clearTimeout(reset); clearInterval(loop); };
+  }, []);
 
   function openDemo() {
     setDemoOpen(true);
@@ -283,45 +353,38 @@ export default function Home() {
       mediaRef.current = mr;
       mr.start();
       setRecording(true);
-      setTimeout(() => {
-        mr.stop();
-        setRecording(false);
-        setRecorded(true);
-      }, 5000); // 5s demo
-    } catch {
-      setRecorded(true); // allow flow even without mic
-    }
+      setTimeout(() => { mr.stop(); setRecording(false); setRecorded(true); }, 5000);
+    } catch { setRecorded(true); }
   }
 
   function analyzeRecording() {
     setAnalyzing(true);
-    setTimeout(() => {
-      setAnalyzing(false);
-      setInsight(insights[goal] || insights.confidence);
-    }, 2200);
+    setTimeout(() => { setAnalyzing(false); setInsight(insights[goal] || insights.confidence); }, 2200);
   }
 
   function startRetry() {
-    setRetrying(true);
-    setRecording(true);
-    setTimeout(() => {
-      setRecording(false);
-      setRetryRecorded(true);
-    }, 5000);
+    setRetrying(true); setRecording(true);
+    setTimeout(() => { setRecording(false); setRetryRecorded(true); }, 5000);
   }
 
   function analyzeRetry() {
     setAnalyzing(true);
-    setTimeout(() => {
-      setAnalyzing(false);
-      setRetryFeedback(retryFeedbacks[goal] || retryFeedbacks.confidence);
-    }, 1800);
+    setTimeout(() => { setAnalyzing(false); setRetryFeedback(retryFeedbacks[goal] || retryFeedbacks.confidence); }, 1800);
   }
+
+  const heroConvo = [
+    { who: 'user', text: 'I have an interview tomorrow morning.' },
+    { who: 'rina', text: 'Give me your opening answer.' },
+    { who: 'user', text: 'Hi, I\'m Sarah, I have five years in marketing and—' },
+    { who: 'system', text: 'Analyzing pace · pauses · emphasis...' },
+    { who: 'rina', text: 'Pause after "five years". Let it land.' },
+    { who: 'result', text: 'Pace ↑ · Pauses ↑ · Confidence ↑' },
+  ];
 
   return (
     <div className={styles.page}>
 
-      {/* ── NAV ── */}
+      {/* NAV */}
       <nav className={styles.navbar}>
         <div className={styles.navInner}>
           <div className={styles.logo} onClick={() => router.push('/')}>
@@ -333,8 +396,8 @@ export default function Home() {
             <span className={styles.logoText}>Voice<span>Control</span> AI</span>
           </div>
           <div className={styles.navLinks}>
-            <a href="#how">How It Works</a>
             <a href="#demo">Free Demo</a>
+            <a href="#how">How It Works</a>
             <a href="/pricing">Pricing</a>
           </div>
           <div className={styles.navCta}>
@@ -347,8 +410,8 @@ export default function Home() {
         </div>
         {mobileMenuOpen && (
           <div className={styles.mobileMenu}>
-            <a href="#how" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
             <a href="#demo" onClick={() => setMobileMenuOpen(false)}>Free Demo</a>
+            <a href="#how" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
             <a href="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
             <button onClick={() => router.push('/login')}>Sign in</button>
             <button className={styles.btnPrimary} onClick={() => router.push('/signup')}>Start Free</button>
@@ -358,55 +421,153 @@ export default function Home() {
 
       {/* ── HERO ── */}
       <section className={styles.hero}>
-        {/* Video background — replace src with AI generated video */}
         <div className={styles.videoBg}>
-          <video
-            autoPlay muted loop playsInline
-            className={styles.heroVideo}
-            poster="/hero-poster.jpg"
-          >
-            {/* Replace this with AI generated video when ready */}
+          {/* VIDEO PLACEHOLDER — replace /hero-placeholder.mp4 with AI generated video */}
+          <video autoPlay muted loop playsInline className={styles.heroVideo} poster="/hero-poster.jpg">
             <source src="/hero-placeholder.mp4" type="video/mp4" />
           </video>
           <div className={styles.videoOverlay} />
         </div>
 
-        <div className={styles.heroContent}>
-          <span className={styles.pill}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
-            </svg>
-            AI Voice Coaching
-          </span>
-
-          <h1 className={styles.heroHeading}>
-            BE HEARD.<br />
-            <span className={styles.heroAccent}>GO FURTHER.</span>
-          </h1>
-
-          <p className={styles.heroSub}>
-            Personalized AI voice coaching built around your voice and your goals.<br />
-            Just 3 minutes a day.
-          </p>
-
-          <button className={styles.heroCta} onClick={openDemo}>
-            <span className={styles.heroCtaGlow} />
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
-            </svg>
-            TRY YOUR COACH FREE
-          </button>
-
-          <div className={styles.goalTags}>
-            {['Interview', 'Leadership', 'IELTS', 'Presentations', 'Clear English', 'Confidence'].map(g => (
-              <span key={g} className={styles.goalTag}>{g}</span>
-            ))}
+        <div className={styles.heroInner}>
+          {/* Left — animated conversation */}
+          <div className={styles.heroLeft}>
+            <div className={styles.heroConvoCard}>
+              <div className={styles.heroConvoBadge}>
+                <span className={styles.liveDot} />
+                Live Session
+              </div>
+              <div className={styles.heroConvo}>
+                {heroConvo.map((msg, i) => (
+                  <div key={i} className={`${styles.heroMsg} ${i <= heroStep ? styles.heroMsgVisible : ''}`}
+                    style={{ transitionDelay: `${i * 0.1}s` }}>
+                    {msg.who === 'user' && (
+                      <div className={styles.heroMsgUser}><span className={styles.heroMsgWho}>You</span><p>{msg.text}</p></div>
+                    )}
+                    {msg.who === 'rina' && (
+                      <div className={styles.heroMsgRina}><span className={styles.heroMsgWho} style={{ color: '#C9A84C' }}>Rina</span><p>{msg.text}</p></div>
+                    )}
+                    {msg.who === 'system' && (
+                      <div className={styles.heroMsgSystem}><Waveform active={i <= heroStep} bars={8} /><span>{msg.text}</span></div>
+                    )}
+                    {msg.who === 'result' && (
+                      <div className={styles.heroMsgResult}>{msg.text}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          <Waveform bars={14} />
+          {/* Right — headline */}
+          <div className={styles.heroRight}>
+            <span className={styles.pill}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
+              </svg>
+              AI Voice Coaching
+            </span>
+            <h1 className={styles.heroHeading}>
+              Your voice.<br />
+              <span className={styles.heroAccent}>An AI coach</span><br />
+              that actually listens.
+            </h1>
+            <p className={styles.heroSub}>
+              Personalized coaching built around your voice and your goals.<br />
+              Just 3 minutes a day.
+            </p>
+            <button className={styles.heroCta} onClick={openDemo}>
+              <span className={styles.heroCtaGlow} />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
+              </svg>
+              TRY YOUR COACH FREE
+            </button>
+            <div className={styles.goalTags}>
+              {['Interview', 'Leadership', 'IELTS', 'Presentations', 'Clear English', 'Confidence'].map(g => (
+                <span key={g} className={styles.goalTag}>{g}</span>
+              ))}
+            </div>
+          </div>
         </div>
+
+        {/* Scroll connector */}
+        <div className={styles.heroConnector}>
+          <Waveform active bars={20} />
+          <div className={styles.scrollArrow}>↓</div>
+        </div>
+      </section>
+
+      {/* ── LIVE SESSION SHOWCASE ── */}
+      <section className={styles.showcaseSection}>
+        <FadeSection className={styles.sectionWrap}>
+          <p className={styles.eyebrow}>Watch It Happen</p>
+          <h2 className={styles.sectionHeading}>A real coaching session. Right now.</h2>
+          <p className={styles.sectionSub}>Rina listens, analyzes, and gives one specific correction. Watch the metrics change.</p>
+          <LiveSessionDemo />
+        </FadeSection>
+        <div className={styles.sectionConnector}><div className={styles.connectorPulse} /></div>
+      </section>
+
+      {/* ── BEFORE → AFTER ── */}
+      <section className={styles.beforeAfterSection}>
+        <FadeSection className={styles.sectionWrap}>
+          <p className={styles.eyebrow}>The Transformation</p>
+          <h2 className={styles.sectionHeading}>Before coaching → After coaching</h2>
+          <div className={styles.beforeAfterGrid}>
+            {/* Before */}
+            <div className={styles.beforeCard}>
+              <p className={styles.beforeAfterLabel} style={{ color: '#F87171' }}>BEFORE</p>
+              {/* VIDEO PLACEHOLDER — replace with actual "before" voice recording clip */}
+              <div className={styles.videoPlaceholder}>
+                <div className={styles.videoPlaceholderInner}>
+                  <span className={styles.videoPlaceholderIcon}>▶</span>
+                  <p className={styles.videoPlaceholderText}>[VIDEO: Rushed delivery, nervous pace]</p>
+                  <p className={styles.videoPlaceholderNote}>Replace with client-provided video</p>
+                </div>
+              </div>
+              <div className={styles.beforeAfterWave}>
+                {/* Jagged rushed waveform */}
+                {[18, 32, 8, 40, 12, 36, 6, 42, 14, 28, 10, 38, 8, 34].map((h, i) => (
+                  <div key={i} className={styles.waveBarStatic} style={{ height: `${h}px`, background: 'rgba(248,113,113,0.6)' }} />
+                ))}
+              </div>
+              <div className={styles.beforeAfterScore} style={{ color: '#F87171' }}>Authority: 45/100</div>
+            </div>
+
+            {/* Rina coaching */}
+            <div className={styles.coachingCenter}>
+              <div className={styles.coachingCenterInner}>
+                <img src="/Reha.jpeg" alt="Rina" className={styles.coachingAvatar} />
+                <div className={styles.coachingQuote}>"Pause after your key point. Let it land."</div>
+                <Waveform active bars={6} />
+              </div>
+            </div>
+
+            {/* After */}
+            <div className={styles.afterCard}>
+              <p className={styles.beforeAfterLabel} style={{ color: '#4ADE80' }}>AFTER</p>
+              {/* VIDEO PLACEHOLDER — replace with actual "after" voice recording clip */}
+              <div className={styles.videoPlaceholder}>
+                <div className={styles.videoPlaceholderInner}>
+                  <span className={styles.videoPlaceholderIcon}>▶</span>
+                  <p className={styles.videoPlaceholderText}>[VIDEO: Calm, confident delivery]</p>
+                  <p className={styles.videoPlaceholderNote}>Replace with client-provided video</p>
+                </div>
+              </div>
+              <div className={styles.beforeAfterWave}>
+                {/* Smooth calm waveform */}
+                {[20, 28, 22, 30, 24, 32, 20, 28, 26, 30, 22, 28, 24, 26].map((h, i) => (
+                  <div key={i} className={styles.waveBarStatic} style={{ height: `${h}px`, background: 'rgba(74,222,128,0.6)' }} />
+                ))}
+              </div>
+              <div className={styles.beforeAfterScore} style={{ color: '#4ADE80' }}>Authority: 86/100</div>
+            </div>
+          </div>
+        </FadeSection>
+        <div className={styles.sectionConnector}><div className={styles.connectorPulse} /></div>
       </section>
 
       {/* ── FREE DEMO ── */}
@@ -417,38 +578,26 @@ export default function Home() {
             <h2 className={styles.sectionHeading}>Hear what your voice sounds like to others</h2>
             <p className={styles.sectionSub}>30 seconds. No account needed. Real AI coaching insight.</p>
             <button className={styles.heroCta} onClick={openDemo}>
-              <span className={styles.heroCtaGlow} />
-              TRY YOUR COACH FREE
+              <span className={styles.heroCtaGlow} />TRY YOUR COACH FREE
             </button>
           </FadeSection>
         ) : (
           <div className={styles.demoBox}>
-
-            {/* STEP 1 — Goal */}
             {!goal && (
               <FadeSection>
                 <p className={styles.demoQuestion}>What do you want your voice to help you achieve?</p>
                 <div className={styles.goalGrid}>
                   {goals.map(g => (
-                    <button
-                      key={g.id}
-                      className={styles.goalBtn}
-                      onClick={() => setGoal(g.id)}
-                    >
-                      <span className={styles.goalBtnIcon}>{g.icon}</span>
-                      {g.label}
+                    <button key={g.id} className={styles.goalBtn} onClick={() => setGoal(g.id)}>
+                      <span className={styles.goalBtnIcon}>{g.icon}</span>{g.label}
                     </button>
                   ))}
                 </div>
               </FadeSection>
             )}
-
-            {/* STEP 2 — Record */}
             {goal && !recorded && !insight && (
               <FadeSection>
-                <p className={styles.demoQuestion}>
-                  Speak for 30 seconds — introduce yourself or talk about your goal.
-                </p>
+                <p className={styles.demoQuestion}>Speak for 30 seconds — introduce yourself or talk about your goal.</p>
                 <div className={styles.recordArea}>
                   <Waveform active={recording} bars={16} />
                   {!recording ? (
@@ -461,34 +610,25 @@ export default function Home() {
                       Start Recording
                     </button>
                   ) : (
-                    <div className={styles.recordingIndicator}>
-                      <span className={styles.recDot} />
-                      Listening...
-                    </div>
+                    <div className={styles.recordingIndicator}><span className={styles.recDot} />Listening...</div>
                   )}
                 </div>
               </FadeSection>
             )}
-
-            {/* STEP 3 — Analyze */}
             {recorded && !insight && !analyzing && (
               <FadeSection>
                 <p className={styles.demoQuestion}>Recording complete. Ready for your coaching insight?</p>
                 <button className={styles.heroCta} onClick={analyzeRecording}>
-                  <span className={styles.heroCtaGlow} />
-                  Analyze My Voice
+                  <span className={styles.heroCtaGlow} />Analyze My Voice
                 </button>
               </FadeSection>
             )}
-
             {analyzing && (
               <div className={styles.analyzingBox}>
                 <Waveform active bars={20} />
                 <p className={styles.analyzingText}>AI is analyzing your voice...</p>
               </div>
             )}
-
-            {/* STEP 4 — Insight */}
             {insight && !retryFeedback && (
               <FadeSection>
                 <div className={styles.insightBox}>
@@ -496,11 +636,10 @@ export default function Home() {
                   <p className={styles.insightText}>{insight}</p>
                   <p className={styles.insightSub}>Let&apos;s work on that.</p>
                 </div>
-
                 {!retrying && !retryRecorded && (
                   <>
                     <p className={styles.demoQuestion} style={{ marginTop: '24px' }}>
-                      Now try again — this time, focus on your key point and slow down before it.
+                      Now try again — focus on your key point and slow down before it.
                     </p>
                     <button className={styles.recordBtn} onClick={startRetry} style={{ margin: '0 auto', display: 'flex' }}>
                       <span className={styles.recordRing} />
@@ -512,72 +651,49 @@ export default function Home() {
                     </button>
                   </>
                 )}
-
-                {retrying && recording && (
-                  <div className={styles.recordingIndicator}>
-                    <Waveform active bars={16} />
-                    <span className={styles.recDot} /> Listening...
-                  </div>
-                )}
-
+                {retrying && recording && <div className={styles.recordingIndicator}><Waveform active bars={16} /><span className={styles.recDot} />Listening...</div>}
                 {retryRecorded && !retryFeedback && !analyzing && (
                   <button className={styles.heroCta} onClick={analyzeRetry} style={{ marginTop: '20px' }}>
-                    <span className={styles.heroCtaGlow} />
-                    COACH ME
+                    <span className={styles.heroCtaGlow} />COACH ME
                   </button>
                 )}
               </FadeSection>
             )}
-
-            {/* STEP 5 — Retry Feedback + Conversion */}
             {retryFeedback && !converted && (
               <FadeSection>
-                <div className={styles.retryBox}>
-                  <p className={styles.retryFeedback}>{retryFeedback}</p>
-                </div>
+                <div className={styles.retryBox}><p className={styles.retryFeedback}>{retryFeedback}</p></div>
                 <button className={styles.heroCta} onClick={() => setConverted(true)} style={{ marginTop: '24px' }}>
-                  <span className={styles.heroCtaGlow} />
-                  See What 30 Days Can Do
+                  <span className={styles.heroCtaGlow} />See What 30 Days Can Do
                 </button>
               </FadeSection>
             )}
-
-            {/* STEP 6 — Conversion */}
             {converted && (
               <FadeSection>
                 <div className={styles.conversionBox}>
                   <p className={styles.conversionHeading}>YOU JUST MET YOUR VOICE COACH.</p>
-                  <p className={styles.conversionSub}>
-                    Imagine what it could learn about your voice in 30 days.<br />
-                    3 minutes a day. Personalized to you.
-                  </p>
-                  <button
-                    className={styles.heroCta}
-                    onClick={() => router.push('/signup')}
-                    style={{ marginTop: '28px' }}
-                  >
-                    <span className={styles.heroCtaGlow} />
-                    START MY PERSONAL PROGRAM
+                  <p className={styles.conversionSub}>Imagine what it could learn about your voice in 30 days.<br />3 minutes a day. Personalized to you.</p>
+                  <button className={styles.heroCta} onClick={() => router.push('/signup')} style={{ marginTop: '28px' }}>
+                    <span className={styles.heroCtaGlow} />START MY PERSONAL PROGRAM
                   </button>
                 </div>
               </FadeSection>
             )}
-
           </div>
         )}
+        <div className={styles.sectionConnector}><div className={styles.connectorPulse} /></div>
       </section>
 
       {/* ── HOW IT WORKS ── */}
       <section className={styles.howSection} id="how">
         <FadeSection className={styles.sectionWrap}>
           <p className={styles.eyebrow}>The Process</p>
-          <h2 className={styles.sectionHeading}>Speak → AI Listens → AI Coaches → Practice → AI Adapts</h2>
+          <h2 className={styles.sectionHeading}>I have a voice problem → Rina hears it → trains me → I improve</h2>
           <div className={styles.stepsGrid}>
             {[
               { icon: '🎙️', label: 'SPEAK', title: 'Record 30 seconds', desc: 'Speak naturally. No script needed.', delay: 0 },
-              { icon: '🧠', label: 'LISTEN', title: 'AI Listens', desc: 'Whisper transcribes. AI measures pace, pitch, pauses, endings.', delay: 1 },
-              { icon: '🎓', label: 'COACH', title: 'Personal Coaching', desc: 'One specific insight. One targeted exercise. Every session.', delay: 2 },
-              { icon: '📈', label: 'IMPROVE', title: 'Track Progress', desc: 'Authority Score improves. AI adapts to your growth.', delay: 3 },
+              { icon: '🧠', label: 'LISTEN', title: 'Rina Listens', desc: 'AI measures pace, pitch, pauses, emphasis.', delay: 1 },
+              { icon: '🎓', label: 'COACH', title: 'One Specific Correction', desc: 'One insight. One exercise. Every session.', delay: 2 },
+              { icon: '📈', label: 'IMPROVE', title: 'Rina Adapts', desc: 'Authority Score improves. Rina remembers and builds on every session.', delay: 3 },
             ].map((step, i) => (
               <div key={i} className={styles.stepCard} style={{ '--step-delay': `${step.delay * 0.15}s` }}>
                 <div className={styles.stepLabel}>{step.label}</div>
@@ -589,45 +705,65 @@ export default function Home() {
             ))}
           </div>
         </FadeSection>
-      </section>
-
-      {/* ── PERSONALIZATION ── */}
-      <section className={styles.personalSection}>
-        <FadeSection className={styles.sectionWrap}>
-          <p className={styles.eyebrow}>Built Around You</p>
-          <h2 className={styles.sectionHeading}>Different goals. Different coaching.</h2>
-          <div className={styles.personalGrid}>
-            {[
-              { goal: 'Job Interview', focus: 'Pace & Confidence', insight: 'You rush through your strongest points. We slow you down where it counts.' },
-              { goal: 'IELTS Speaking', focus: 'Fluency & Clarity', insight: 'Your transitions are weak. We build linking phrases into muscle memory.' },
-              { goal: 'Leadership', focus: 'Authority & Endings', insight: 'Your sentences trail off. We train you to land every statement with conviction.' },
-            ].map((p, i) => (
-              <div key={i} className={styles.personalCard}>
-                <span className={styles.personalGoal}>{p.goal}</span>
-                <p className={styles.personalFocus}>{p.focus}</p>
-                <p className={styles.personalInsight}>&ldquo;{p.insight}&rdquo;</p>
-              </div>
-            ))}
-          </div>
-        </FadeSection>
+        <div className={styles.sectionConnector}><div className={styles.connectorPulse} /></div>
       </section>
 
       {/* ── STORY SECTION ── */}
       <StorySection onSignup={() => router.push('/signup')} />
 
-      {/* ── PRODUCT PREVIEW ── */}
+      {/* ── PROGRESS TIMELINE ── */}
+      <section className={styles.timelineSection}>
+        <FadeSection className={styles.sectionWrap}>
+          <p className={styles.eyebrow}>Rina Remembers</p>
+          <h2 className={styles.sectionHeading}>Day 1 → Day 7 → Day 21. Real progress.</h2>
+          <p className={styles.sectionSub}>Rina tracks every session and adapts your training as you improve.</p>
+          <ProgressTimeline />
+        </FadeSection>
+        <div className={styles.sectionConnector}><div className={styles.connectorPulse} /></div>
+      </section>
+
+      {/* ── GOALS SECTION ── VIDEO PLACEHOLDERS ── */}
+      <section className={styles.goalsSection}>
+        <FadeSection className={styles.sectionWrap}>
+          <p className={styles.eyebrow}>Different People. Different Goals.</p>
+          <h2 className={styles.sectionHeading}>Rina coaches everyone differently.</h2>
+          <div className={styles.goalsGrid}>
+            {[
+              { goal: 'Job Interview', desc: 'Rina coaches confident delivery under pressure.', color: '#C9A84C', placeholder: '[VIDEO: Job candidate answering interview question confidently]' },
+              { goal: 'Leadership', desc: 'Rina builds executive presence and authority.', color: '#A78BFA', placeholder: '[VIDEO: Manager speaking in a meeting with authority]' },
+              { goal: 'IELTS', desc: 'Rina improves fluency, pace, and natural delivery.', color: '#2DD4BF', placeholder: '[VIDEO: Student completing IELTS speaking test confidently]' },
+              { goal: 'Presentations', desc: 'Rina trains calm, engaging delivery on stage.', color: '#4ADE80', placeholder: '[VIDEO: Presenter delivering to a room with confidence]' },
+            ].map((g, i) => (
+              <div key={i} className={styles.goalCard}>
+                <div className={styles.videoPlaceholder} style={{ marginBottom: '16px', minHeight: '160px' }}>
+                  <div className={styles.videoPlaceholderInner}>
+                    <span className={styles.videoPlaceholderIcon}>▶</span>
+                    <p className={styles.videoPlaceholderText}>{g.placeholder}</p>
+                    <p className={styles.videoPlaceholderNote}>Replace with client-provided video</p>
+                  </div>
+                </div>
+                <p className={styles.goalCardTitle} style={{ color: g.color }}>{g.goal}</p>
+                <p className={styles.goalCardDesc}>{g.desc}</p>
+              </div>
+            ))}
+          </div>
+        </FadeSection>
+        <div className={styles.sectionConnector}><div className={styles.connectorPulse} /></div>
+      </section>
+
+      {/* ── PRODUCT ── */}
       <section className={styles.productSection}>
         <FadeSection className={styles.sectionWrap}>
           <p className={styles.eyebrow}>What You Get</p>
           <h2 className={styles.sectionHeading}>Everything your voice needs to improve</h2>
           <div className={styles.productGrid}>
             {[
-              { icon: '📊', title: 'Authority Score', desc: 'A single number that tracks your voice confidence across every session.' },
-              { icon: '🎓', title: 'Live AI Coach', desc: 'Talk to your coach face-to-face. It knows your history and adapts in real time.' },
+              { icon: '📊', title: 'Authority Score', desc: 'A single number tracking your voice confidence across every session.' },
+              { icon: '🎓', title: 'Live AI Coach', desc: 'Talk to Rina face-to-face. She knows your history and adapts in real time.' },
               { icon: '🎧', title: 'Voice Shadowing', desc: 'Listen to model sentences. Record yourself. Hear the difference.' },
-              { icon: '📧', title: 'Daily Coaching Emails', desc: 'Morning, afternoon, and evening — each one personalized by your latest data.' },
-              { icon: '📈', title: '7 & 30 Day Challenges', desc: 'Structured programs that build your voice systematically over time.' },
-              { icon: '🎯', title: 'Personalized Curriculum', desc: 'Exercises chosen by AI based on your weakest area, updated every session.' },
+              { icon: '📧', title: 'Daily Coaching Emails', desc: 'One email a day, generated by Rina from your latest session data.' },
+              { icon: '📈', title: '7 & 30 Day Challenges', desc: 'Structured programs that build your voice systematically.' },
+              { icon: '🎯', title: 'Personalized Curriculum', desc: 'Exercises chosen by Rina based on your weakest area, updated every session.' },
             ].map((f, i) => (
               <div key={i} className={styles.productCard}>
                 <span className={styles.productIcon}>{f.icon}</span>
@@ -645,13 +781,12 @@ export default function Home() {
           <p className={styles.eyebrow} style={{ color: 'rgba(255,255,255,0.5)' }}>Start Today</p>
           <h2 className={styles.finalCtaHeading}>3 minutes a day.<br />A voice that opens doors.</h2>
           <button className={styles.heroCta} onClick={() => router.push('/signup')} style={{ fontSize: '16px', padding: '16px 40px' }}>
-            <span className={styles.heroCtaGlow} />
-            START MY 3 MINUTES
+            <span className={styles.heroCtaGlow} />START MY 3 MINUTES
           </button>
         </FadeSection>
       </section>
 
-      {/* ── FOOTER ── */}
+      {/* FOOTER */}
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
           <div className={styles.logo}>
