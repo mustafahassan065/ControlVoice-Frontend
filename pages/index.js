@@ -158,9 +158,7 @@ export default function Home() {
 
           <Reveal delay={0}>
             <div className={styles.techCard}>
-              <div className={styles.techVisual}>
-                <SoundSculpture />
-              </div>
+              <SoundSculpture />
               <p className={styles.techLabel}>PRONUNCIATION</p>
               <p className={styles.techDesc}>
                 Every sound shaped with precision. AI hears what others miss.
@@ -170,9 +168,7 @@ export default function Home() {
 
           <Reveal delay={0.15}>
             <div className={styles.techCard}>
-              <div className={styles.techVisual}>
-                <PitchContour />
-              </div>
+              <PitchContour />
               <p className={styles.techLabel}>INTONATION</p>
               <p className={styles.techDesc}>
                 Your pitch contour mapped in real time. Rise and fall with intention.
@@ -182,9 +178,7 @@ export default function Home() {
 
           <Reveal delay={0.3}>
             <div className={styles.techCard}>
-              <div className={styles.techVisual}>
-                <VoiceEnergy />
-              </div>
+              <VoiceEnergy />
               <p className={styles.techLabel}>PRESENCE</p>
               <p className={styles.techDesc}>
                 Voice energy visualized. Command attention before you finish a sentence.
@@ -204,8 +198,8 @@ export default function Home() {
           <div className={styles.editorialImg}>
             {/* IMAGE PLACEHOLDER — replace with professional woman preparing for interview */}
             <img
-              src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=1400&q=85"
-              alt="Professional preparing for interview"
+              src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=1400&q=90"
+              alt="Professional in interview"
               className={styles.editorialImgEl}
             />
             <div className={styles.editorialOverlay} />
@@ -222,8 +216,8 @@ export default function Home() {
           <div className={styles.editorialImg}>
             {/* IMAGE PLACEHOLDER — replace with person speaking in a meeting */}
             <img
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1400&q=85"
-              alt="Person speaking in meeting"
+              src="https://images.unsplash.com/photo-1556761175-4b46a572b786?w=1400&q=90"
+              alt="Professional speaking in meeting"
               className={styles.editorialImgEl}
             />
             <div className={styles.editorialOverlay} />
@@ -240,7 +234,7 @@ export default function Home() {
           <div className={styles.editorialImg}>
             {/* IMAGE PLACEHOLDER — replace with public speaker on stage */}
             <img
-              src="https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=1400&q=85"
+              src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1400&q=90"
               alt="Public speaker on stage"
               className={styles.editorialImgEl}
             />
@@ -329,21 +323,21 @@ export default function Home() {
           {[
             {
               label: 'INTERVIEW',
-              img: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=85',
+              img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&q=90',
               before: 'Rushed. Nervous. Trailing sentences.',
               after: 'Calm. Composed. Every word lands.',
               scoreB: 44, scoreA: 87,
             },
             {
               label: 'PRONUNCIATION',
-              img: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&q=85',
+              img: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&q=90',
               before: 'Unclear consonants. Inconsistent vowels.',
               after: 'Crisp, precise, naturally confident.',
               scoreB: 51, scoreA: 89,
             },
             {
               label: 'LEADERSHIP',
-              img: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&q=85',
+              img: 'https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=800&q=90',
               before: 'Low energy. No authority. Easily ignored.',
               after: 'Executive presence. Room listens.',
               scoreB: 38, scoreA: 92,

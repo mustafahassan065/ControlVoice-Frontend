@@ -19,7 +19,7 @@
 .page { background: var(--warm); color: var(--text); font-family: var(--font-body); overflow-x: hidden; box-sizing: border-box; }
 
 /* ══ SCROLL REVEAL ════════════════════════════════════════ */
-.reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.9s ease var(--d, 0s), transform 0.9s ease var(--d, 0s); }
+.reveal { opacity: 0; transform: translateY(40px); transition: opacity 1s cubic-bezier(0.22,1,0.36,1) var(--d, 0s), transform 1s cubic-bezier(0.22,1,0.36,1) var(--d, 0s); }
 .revealed { opacity: 1; transform: none; }
 
 /* ══ NAV ═════════════════════════════════════════════════ */
@@ -42,13 +42,15 @@
 .waveformRow { display: flex; align-items: center; gap: 3px; }
 .waveformBar {
   display: block; width: 3px; border-radius: 2px; background: var(--c, #C9A84C);
-  animation: waveAnim 1.8s ease-in-out infinite;
-  animation-delay: calc(var(--i) * 0.07s);
-  height: calc(4px + sin(var(--i)) * 20px);
+  animation: waveAnim 1.6s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.06s);
+  height: 24px; transform-origin: bottom;
 }
 @keyframes waveAnim {
-  0%, 100% { transform: scaleY(0.4); opacity: 0.5; }
+  0%, 100% { transform: scaleY(0.25); opacity: 0.35; }
+  30% { transform: scaleY(0.8); opacity: 0.7; }
   50% { transform: scaleY(1); opacity: 1; }
+  70% { transform: scaleY(0.6); opacity: 0.6; }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -75,31 +77,31 @@
 .techSection { background: var(--ivory); padding: 120px 40px; }
 .techTagline { font-family: var(--font-display); font-size: clamp(32px, 4vw, 56px); text-align: center; color: var(--text); margin-bottom: 80px; font-weight: 400; letter-spacing: -0.01em; }
 .techGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 60px; max-width: 1200px; margin: 0 auto; }
-.techCard { display: flex; flex-direction: column; align-items: center; gap: 28px; }
-.techVisual { width: 100%; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; background: var(--cream); border-radius: 2px; overflow: hidden; padding: 32px; }
+.techCard { display: flex; flex-direction: column; align-items: center; gap: 32px; padding: 0 20px; }
+/* techVisual box removed — visuals render directly */
 .techLabel { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); font-weight: 600; text-align: center; }
-.techDesc { font-size: 15px; color: var(--muted); line-height: 1.7; text-align: center; max-width: 280px; }
+.techDesc { font-size: 15px; color: var(--muted); line-height: 1.75; text-align: center; max-width: 260px; margin: 0 auto; }
 
 /* Pitch contour */
-.pitchSvg { width: 100%; height: auto; }
+.pitchSvg { width: 100%; max-width: 340px; height: auto; margin: 0 auto; display: block; }
 .pitchPath { stroke-dasharray: 1200; stroke-dashoffset: 1200; animation: drawPath 2.5s ease forwards 0.5s; }
 @keyframes drawPath { to { stroke-dashoffset: 0; } }
 .pitchDot { animation: dotPulse 2s ease-in-out infinite 3s; }
 @keyframes dotPulse { 0%,100% { r: 5; opacity: 1; } 50% { r: 8; opacity: 0.6; } }
 
 /* Sound sculpture */
-.sculptSvg { width: 100%; height: auto; }
+.sculptSvg { width: 240px; height: auto; margin: 0 auto; display: block; }
 .sculptRing { animation: sculptPulse 3s ease-in-out infinite; animation-delay: calc(var(--ri) * 0.15s); transform-origin: 200px 100px; }
 @keyframes sculptPulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.04); opacity: 0.7; } }
 
 /* Voice energy */
-.energyWrap { display: flex; align-items: center; gap: 4px; height: 100%; width: 100%; }
+.energyWrap { display: flex; align-items: flex-end; gap: 3px; height: 120px; width: 100%; max-width: 320px; margin: 0 auto; }
 .energyBar {
-  flex: 1; background: var(--gold); border-radius: 1px;
-  height: var(--eh, 20px);
+  flex: 1; background: var(--gold); border-radius: 2px;
+  height: var(--eh, 20px); min-height: 8px;
   animation: energyAnim 1.4s ease-in-out infinite;
   animation-delay: calc(var(--ei) * 0.06s);
-  opacity: 0.8;
+  opacity: 0.85; transition: height 0.3s;
 }
 @keyframes energyAnim { 0%,100% { transform: scaleY(0.5); opacity: 0.4; } 50% { transform: scaleY(1); opacity: 1; } }
 
@@ -116,7 +118,7 @@
 .editorialOverlay { position: absolute; inset: 0; background: rgba(8,8,8,0.18); }
 .editorialCopy { display: flex; flex-direction: column; justify-content: center; padding: 60px 80px; background: var(--warm); }
 .editorialWord { font-family: var(--font-display); font-size: clamp(36px, 4vw, 64px); color: var(--text); line-height: 1.1; margin-bottom: 24px; font-weight: 400; letter-spacing: -0.01em; }
-.editorialSub { font-size: 16px; color: var(--muted); line-height: 1.75; max-width: 360px; }
+.editorialSub { font-size: 16px; color: var(--muted); line-height: 1.75; max-width: 340px; display: block; margin-top: 16px; }
 
 /* ══════════════════════════════════════════════════════════
    4. PRODUCT VIDEO
