@@ -199,7 +199,7 @@ export default function Home() {
           <div className={styles.editorialImg}>
             {/* IMAGE PLACEHOLDER — replace with professional woman preparing for interview */}
             <img
-              src="https://images.unsplash.com/photo-1573496267526-08a69e46a409?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fHdvbWVuJTIwZ2l2aW5nJTIwaW50ZXJ2aWV3fGVufDB8fDB8fHww"
+              src="https://unsplash.com/photos/two-women-taking-to-each-other-while-holding-pens-4PU-OC8sW98"
               alt="Professional preparing for interview"
               className={styles.editorialImgEl}
             />
@@ -235,7 +235,7 @@ export default function Home() {
           <div className={styles.editorialImg}>
             {/* IMAGE PLACEHOLDER — replace with public speaker on stage */}
             <img
-              src="https://images.unsplash.com/photo-1564522365984-c08ed1f78893?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHBlcnNvbiUyMHNwZWFraW5nJTIwb24lMjBzdGFnZXxlbnwwfHwwfHx8MA%3D%3D"
+              src="https://unsplash.com/photos/a-woman-with-blue-hair-standing-in-front-of-an-audience-GkWP64truqg"
               alt="Public speaker on stage"
               className={styles.editorialImgEl}
             />

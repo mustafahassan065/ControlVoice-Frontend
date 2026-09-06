@@ -170,7 +170,7 @@
 .transformImgWrap {
   position: relative;
   aspect-ratio: unset;  /* yeh hata do */
-  height: 420px;        /* fixed height do */
+  height: 720px;        /* fixed height do */
   overflow: hidden;
   background: var(--cream);
 }
