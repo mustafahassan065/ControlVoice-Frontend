@@ -122,11 +122,12 @@ export default function Home() {
       <section className={styles.hero}>
         {/* VIDEO PLACEHOLDER — replace /public/hero-video.mp4 with AI generated cinematic video
             Prompt: professional woman speaking → nervous → AI analysis → confident transformation */}
+        {/* HERO VIDEO — replace with AI generated video when ready */}
         <video
           className={styles.heroBgVideo}
           autoPlay muted loop playsInline
-          poster="/hero-poster.jpg"
         >
+          <source src="https://videos.pexels.com/video-files/3252376/3252376-uhd_2560_1440_25fps.mp4" type="video/mp4" />
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
         <div className={styles.heroOverlay} />
@@ -198,8 +199,8 @@ export default function Home() {
           <div className={styles.editorialImg}>
             {/* IMAGE PLACEHOLDER — replace with professional woman preparing for interview */}
             <img
-              src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=1400&q=90"
-              alt="Professional in interview"
+              src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=1200&q=90&fit=crop&crop=top"
+              alt="Professional preparing for interview"
               className={styles.editorialImgEl}
             />
             <div className={styles.editorialOverlay} />
@@ -216,7 +217,7 @@ export default function Home() {
           <div className={styles.editorialImg}>
             {/* IMAGE PLACEHOLDER — replace with person speaking in a meeting */}
             <img
-              src="https://images.unsplash.com/photo-1556761175-4b46a572b786?w=1400&q=90"
+              src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1400&q=90&fit=crop"
               alt="Professional speaking in meeting"
               className={styles.editorialImgEl}
             />
@@ -234,7 +235,7 @@ export default function Home() {
           <div className={styles.editorialImg}>
             {/* IMAGE PLACEHOLDER — replace with public speaker on stage */}
             <img
-              src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1400&q=90"
+              src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1400&q=90&fit=crop"
               alt="Public speaker on stage"
               className={styles.editorialImgEl}
             />
@@ -265,11 +266,12 @@ export default function Home() {
               Sequence: person speaks → Rina listens → transcript appears → issue detected
               → Rina gives one correction → user repeats → visible improvement */}
           <div className={styles.productVideoBox}>
+            {/* PRODUCT VIDEO — replace with real screen recording when ready */}
             <video
               className={styles.productVideo}
               autoPlay muted loop playsInline
-              poster="/product-poster.jpg"
             >
+              <source src="https://videos.pexels.com/video-files/7579433/7579433-uhd_2560_1440_25fps.mp4" type="video/mp4" />
               <source src="/product-demo.mp4" type="video/mp4" />
             </video>
             {/* Fallback overlay shown when no video */}
@@ -323,21 +325,21 @@ export default function Home() {
           {[
             {
               label: 'INTERVIEW',
-              img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&q=90',
+              img: '/transform-interview.jpg',
               before: 'Rushed. Nervous. Trailing sentences.',
               after: 'Calm. Composed. Every word lands.',
               scoreB: 44, scoreA: 87,
             },
             {
               label: 'PRONUNCIATION',
-              img: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&q=90',
+              img: '/transform-pronunciation.jpg',
               before: 'Unclear consonants. Inconsistent vowels.',
               after: 'Crisp, precise, naturally confident.',
               scoreB: 51, scoreA: 89,
             },
             {
               label: 'LEADERSHIP',
-              img: 'https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=800&q=90',
+              img: '/transform-leadership.jpg',
               before: 'Low energy. No authority. Easily ignored.',
               after: 'Executive presence. Room listens.',
               scoreB: 38, scoreA: 92,
@@ -347,7 +349,12 @@ export default function Home() {
               <div className={styles.transformCard}>
                 <div className={styles.transformImgWrap}>
                   {/* IMAGE PLACEHOLDER — replace with real before/after portrait */}
-                  <img src={t.img} alt={t.label} className={styles.transformImg} />
+                  <img
+                    src={t.img}
+                    alt={t.label}
+                    className={styles.transformImg}
+                    onError={e => { e.target.src = `https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80`; }}
+                  />
                   <div className={styles.transformImgOverlay} />
                   <p className={styles.transformCardLabel}>{t.label}</p>
                 </div>
@@ -379,11 +386,12 @@ export default function Home() {
         {/* VIDEO PLACEHOLDER — replace /public/final-video.mp4 with cinematic montage
             Sequence: interview → meeting → presentation → international speaker
             → close-up of confident speaking → waveform → AI analysis → final confident delivery */}
+        {/* FINAL VIDEO — replace with cinematic montage when ready */}
         <video
           className={styles.finalVideo}
           autoPlay muted loop playsInline
-          poster="/final-poster.jpg"
         >
+          <source src="https://videos.pexels.com/video-files/5474812/5474812-uhd_2560_1440_25fps.mp4" type="video/mp4" />
           <source src="/final-video.mp4" type="video/mp4" />
         </video>
         <div className={styles.finalOverlay} />
