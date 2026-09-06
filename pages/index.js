@@ -199,7 +199,7 @@ export default function Home() {
           <div className={styles.editorialImg}>
             {/* IMAGE PLACEHOLDER — replace with professional woman preparing for interview */}
             <img
-              src="https://unsplash.com/photos/two-women-taking-to-each-other-while-holding-pens-4PU-OC8sW98"
+              src="https://images.unsplash.com/photo-1459499362902-55a20553e082?q=80&w=1169&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
               alt="Professional preparing for interview"
               className={styles.editorialImgEl}
             />
@@ -235,7 +235,7 @@ export default function Home() {
           <div className={styles.editorialImg}>
             {/* IMAGE PLACEHOLDER — replace with public speaker on stage */}
             <img
-              src="https://unsplash.com/photos/a-woman-with-blue-hair-standing-in-front-of-an-audience-GkWP64truqg"
+              src="https://images.unsplash.com/photo-1564522365984-c08ed1f78893?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
               alt="Public speaker on stage"
               className={styles.editorialImgEl}
             />
@@ -274,33 +274,7 @@ export default function Home() {
               <source src="/hero-video.mp4" type="video/mp4" />
             </video>
             {/* Fallback overlay shown when no video */}
-            <div className={styles.productVideoFallback}>
-              <div className={styles.productDemoAnim}>
-                <div className={styles.demoRow}>
-                  <span className={styles.demoLabel}>You</span>
-                  <span className={styles.demoText}>"I have five years in marketing and I—"</span>
-                </div>
-                <div className={styles.demoAnalyze}>
-                  <Waveform bars={20} color="#C9A84C" height={32} />
-                  <span className={styles.demoAnalyzeText}>Analyzing pace · pauses · intonation</span>
-                </div>
-                <div className={styles.demoRow} style={{ marginTop: '8px' }}>
-                  <span className={styles.demoLabel} style={{ color: '#C9A84C' }}>Rina</span>
-                  <span className={styles.demoText}>"Pause after 'five years'. Let it land."</span>
-                </div>
-                <div className={styles.demoMetrics}>
-                  {[{ l: 'Pace', before: 42, after: 82 }, { l: 'Pause', before: 28, after: 76 }, { l: 'Intonation', before: 55, after: 88 }].map((m, i) => (
-                    <div key={i} className={styles.demoMetric}>
-                      <span className={styles.demoMetricLabel}>{m.l}</span>
-                      <div className={styles.demoMetricBar}>
-                        <div className={styles.demoMetricFill} style={{ '--mw': `${m.after}%` }} />
-                      </div>
-                      <span className={styles.demoMetricVal} style={{ color: '#4ADE80' }}>{m.after}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            
           </div>
         </Reveal>
 
