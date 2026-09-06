@@ -127,7 +127,7 @@ export default function Home() {
           className={styles.heroBgVideo}
           autoPlay muted loop playsInline
         >
-          <source src="https://videos.pexels.com/video-files/3252376/3252376-uhd_2560_1440_25fps.mp4" type="video/mp4" />
+          
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
         <div className={styles.heroOverlay} />
@@ -199,7 +199,7 @@ export default function Home() {
           <div className={styles.editorialImg}>
             {/* IMAGE PLACEHOLDER — replace with professional woman preparing for interview */}
             <img
-              src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=1200&q=90&fit=crop&crop=top"
+              src="https://images.unsplash.com/photo-1698047682091-782b1e5c6536?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8d29tYW4lMjBpbnRlcnZpZXd8ZW58MHx8MHx8fDA%3D"
               alt="Professional preparing for interview"
               className={styles.editorialImgEl}
             />
@@ -235,7 +235,7 @@ export default function Home() {
           <div className={styles.editorialImg}>
             {/* IMAGE PLACEHOLDER — replace with public speaker on stage */}
             <img
-              src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1400&q=90&fit=crop"
+              src="https://images.unsplash.com/photo-1715960350190-2ed0a812962d?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fHNwZWFraW5nJTIwb24lMjBzdGFnZXxlbnwwfHwwfHx8MA%3D%3D"
               alt="Public speaker on stage"
               className={styles.editorialImgEl}
             />
@@ -271,8 +271,7 @@ export default function Home() {
               className={styles.productVideo}
               autoPlay muted loop playsInline
             >
-              <source src="https://videos.pexels.com/video-files/7579433/7579433-uhd_2560_1440_25fps.mp4" type="video/mp4" />
-              <source src="/product-demo.mp4" type="video/mp4" />
+              <source src="/hero-video.mp4" type="video/mp4" />
             </video>
             {/* Fallback overlay shown when no video */}
             <div className={styles.productVideoFallback}>
@@ -391,8 +390,7 @@ export default function Home() {
           className={styles.finalVideo}
           autoPlay muted loop playsInline
         >
-          <source src="https://videos.pexels.com/video-files/5474812/5474812-uhd_2560_1440_25fps.mp4" type="video/mp4" />
-          <source src="/final-video.mp4" type="video/mp4" />
+          <source src="/hero-video.mp4" type="video/mp4" />
         </video>
         <div className={styles.finalOverlay} />
         <div className={styles.finalContent}>
