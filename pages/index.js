@@ -199,7 +199,7 @@ export default function Home() {
           <div className={styles.editorialImg}>
             {/* IMAGE PLACEHOLDER — replace with professional woman preparing for interview */}
             <img
-              src="https://images.unsplash.com/photo-1698047682091-782b1e5c6536?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8d29tYW4lMjBpbnRlcnZpZXd8ZW58MHx8MHx8fDA%3D"
+              src="https://images.unsplash.com/photo-1573496267526-08a69e46a409?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fHdvbWVuJTIwZ2l2aW5nJTIwaW50ZXJ2aWV3fGVufDB8fDB8fHww"
               alt="Professional preparing for interview"
               className={styles.editorialImgEl}
             />
@@ -235,7 +235,7 @@ export default function Home() {
           <div className={styles.editorialImg}>
             {/* IMAGE PLACEHOLDER — replace with public speaker on stage */}
             <img
-              src="https://images.unsplash.com/photo-1715960350190-2ed0a812962d?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fHNwZWFraW5nJTIwb24lMjBzdGFnZXxlbnwwfHwwfHx8MA%3D%3D"
+              src="https://images.unsplash.com/photo-1564522365984-c08ed1f78893?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHBlcnNvbiUyMHNwZWFraW5nJTIwb24lMjBzdGFnZXxlbnwwfHwwfHx8MA%3D%3D"
               alt="Public speaker on stage"
               className={styles.editorialImgEl}
             />
