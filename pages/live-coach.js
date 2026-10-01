@@ -8,12 +8,11 @@ export default function LiveCoach() {
   const [loading, setLoading] = useState(true);
   const [sessionLoading, setSessionLoading] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
+  const [status, setStatus] = useState('');
   const [error, setError] = useState('');
-  const [anamLoaded, setAnamLoaded] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [listening, setListening] = useState(false);
   const clientRef = useRef(null);
-  const videoRef = useRef(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -21,50 +20,17 @@ export default function LiveCoach() {
     const userData = localStorage.getItem('user');
     if (userData) setUser(JSON.parse(userData));
     setLoading(false);
-
-    // Load Anam SDK — try multiple CDN sources
-    const loadSdk = (urls, index = 0) => {
-      if (index >= urls.length) {
-        setError('Failed to load avatar SDK. Please refresh the page.');
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = urls[index];
-      script.async = true;
-      script.onload = () => {
-        console.log('Anam SDK loaded from:', urls[index]);
-        setAnamLoaded(true);
-      };
-      script.onerror = () => loadSdk(urls, index + 1);
-      document.head.appendChild(script);
-    };
-
-    loadSdk([
-      'https://cdn.jsdelivr.net/npm/@anam-ai/js-sdk/dist/index.umd.js',
-      'https://unpkg.com/@anam-ai/js-sdk@latest/dist/index.umd.js',
-      'https://unpkg.com/@anam-ai/js-sdk/dist/index.umd.js',
-    ]);
-
-    return () => {
-      if (clientRef.current) {
-        try { clientRef.current.stopStreaming(); } catch {}
-      }
-    };
   }, []);
 
   async function startSession() {
-    if (!anamLoaded) {
-      setError('Avatar SDK still loading. Please wait a moment.');
-      return;
-    }
-
     setSessionLoading(true);
     setError('');
+    setStatus('Creating session...');
 
     try {
       const token = localStorage.getItem('token');
 
-      // Get session token from backend
+      // Get session token from our backend
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/live-coach/start`, {
         method: 'POST',
         headers: {
@@ -76,54 +42,39 @@ export default function LiveCoach() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Failed to start session');
 
-      const { session_token, persona_id } = data;
+      const { session_token } = data;
+      setStatus('Connecting to Rina...');
 
-      // Initialize Anam client — SDK may export differently
-      const AnamSDK = window.AnamAi || window.Anam || window.anamAi;
-      const createClient = 
-        AnamSDK?.createClientWithSessionToken ||
-        AnamSDK?.AnamClient?.createClientWithSessionToken ||
-        window.createClientWithSessionToken;
+      // Import Anam SDK dynamically using esm.sh
+      const { createClient } = await import('https://esm.sh/@anam-ai/js-sdk@latest');
 
-      if (!createClient) {
-        console.error('Available window keys:', Object.keys(window).filter(k => k.toLowerCase().includes('anam')));
-        throw new Error('Anam SDK not initialized. Please refresh the page.');
-      }
-
-      const client = createClient(session_token);
-      clientRef.current = client;
+      const anamClient = createClient(session_token);
+      clientRef.current = anamClient;
 
       // Event listeners
-      client.addListener('CONNECTION_ESTABLISHED', () => {
-        setSessionActive(true);
-        setSessionLoading(false);
-      });
-
-      client.addListener('AVATAR_STARTED_TALKING', () => setSpeaking(true));
-      client.addListener('AVATAR_STOPPED_TALKING', () => setSpeaking(false));
-      client.addListener('USER_START_TALKING', () => setListening(true));
-      client.addListener('USER_STOP_TALKING', () => setListening(false));
-
-      client.addListener('CONNECTION_CLOSED', () => {
+      anamClient.addListener('AVATAR_STARTED_TALKING', () => setSpeaking(true));
+      anamClient.addListener('AVATAR_STOPPED_TALKING', () => setSpeaking(false));
+      anamClient.addListener('USER_START_TALKING', () => setListening(true));
+      anamClient.addListener('USER_STOP_TALKING', () => setListening(false));
+      anamClient.addListener('CONNECTION_CLOSED', () => {
         setSessionActive(false);
         setSpeaking(false);
         setListening(false);
+        setStatus('');
       });
 
-      client.addListener('ERROR', (err) => {
-        console.error('Anam error:', err);
-        setError('Session error. Please try again.');
-        setSessionActive(false);
-        setSessionLoading(false);
-      });
+      // Stream to video element
+      await anamClient.streamToVideoElement('rina-video');
 
-      // Start streaming to video element
-      await client.streamToVideoElement('rina-video');
+      setSessionActive(true);
+      setSessionLoading(false);
+      setStatus('Connected! Start speaking to Rina');
 
     } catch (err) {
       console.error('Session error:', err);
-      setError(err.message);
+      setError(err.message || 'Failed to connect. Please try again.');
       setSessionLoading(false);
+      setStatus('');
     }
   }
 
@@ -146,6 +97,7 @@ export default function LiveCoach() {
     setSessionActive(false);
     setSpeaking(false);
     setListening(false);
+    setStatus('');
   }
 
   if (loading) {
@@ -206,13 +158,12 @@ export default function LiveCoach() {
                   <div className={styles.featureItem}><span>💡</span><span>Get specific exercises based on your data</span></div>
                 </div>
 
+                {status && <p style={{ color: '#C9A84C', fontSize: '14px', marginTop: '12px' }}>{status}</p>}
                 {error && <div className={styles.errorBox}>{error}</div>}
 
-                <button className={styles.startBtn} onClick={startSession} disabled={sessionLoading || !anamLoaded}>
+                <button className={styles.startBtn} onClick={startSession} disabled={sessionLoading}>
                   {sessionLoading ? (
-                    <><div className={styles.spinnerSmall}></div> Starting Session...</>
-                  ) : !anamLoaded ? (
-                    <>Loading...</>
+                    <><div className={styles.spinnerSmall}></div> {status || 'Starting...'}</>
                   ) : (
                     <>🎙️ Start Live Coaching Session</>
                   )}
@@ -233,11 +184,9 @@ export default function LiveCoach() {
               </p>
             </div>
 
-            {/* Anam Avatar Video */}
             <div className={styles.anamVideoWrap}>
               <video
                 id="rina-video"
-                ref={videoRef}
                 autoPlay
                 playsInline
                 className={styles.anamVideo}
