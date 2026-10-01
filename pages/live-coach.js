@@ -45,8 +45,9 @@ export default function LiveCoach() {
       const { session_token } = data;
       setStatus('Connecting to Rina...');
 
-      // Import Anam SDK
-      const { createClient } = await import('@anam-ai/js-sdk');
+      // Import Anam SDK using main entry
+      const AnamSDK = await import('@anam-ai/js-sdk/dist/main/index.js');
+      const createClient = AnamSDK.createClient || AnamSDK.default?.createClient;
 
       const anamClient = createClient(session_token);
       clientRef.current = anamClient;
