@@ -45,8 +45,8 @@ export default function LiveCoach() {
       const { session_token } = data;
       setStatus('Connecting to Rina...');
 
-      // Import Anam SDK dynamically using esm.sh
-      const { createClient } = await import('https://esm.sh/@anam-ai/js-sdk@latest');
+      // Import Anam SDK
+      const { createClient } = await import('@anam-ai/js-sdk');
 
       const anamClient = createClient(session_token);
       clientRef.current = anamClient;
