@@ -22,13 +22,28 @@ export default function LiveCoach() {
     if (userData) setUser(JSON.parse(userData));
     setLoading(false);
 
-    // Load Anam SDK
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/@anam-ai/js-sdk/dist/index.umd.js';
-    script.async = true;
-    script.onload = () => setAnamLoaded(true);
-    script.onerror = () => setError('Failed to load avatar SDK. Please refresh.');
-    document.head.appendChild(script);
+    // Load Anam SDK — try multiple CDN sources
+    const loadSdk = (urls, index = 0) => {
+      if (index >= urls.length) {
+        setError('Failed to load avatar SDK. Please refresh the page.');
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = urls[index];
+      script.async = true;
+      script.onload = () => {
+        console.log('Anam SDK loaded from:', urls[index]);
+        setAnamLoaded(true);
+      };
+      script.onerror = () => loadSdk(urls, index + 1);
+      document.head.appendChild(script);
+    };
+
+    loadSdk([
+      'https://cdn.jsdelivr.net/npm/@anam-ai/js-sdk/dist/index.umd.js',
+      'https://unpkg.com/@anam-ai/js-sdk@latest/dist/index.umd.js',
+      'https://unpkg.com/@anam-ai/js-sdk/dist/index.umd.js',
+    ]);
 
     return () => {
       if (clientRef.current) {
@@ -63,11 +78,19 @@ export default function LiveCoach() {
 
       const { session_token, persona_id } = data;
 
-      // Initialize Anam client
-      const AnamClient = window.AnamClient || window.Anam?.AnamClient;
-      if (!AnamClient) throw new Error('Anam SDK not loaded properly. Please refresh.');
+      // Initialize Anam client — SDK may export differently
+      const AnamSDK = window.AnamAi || window.Anam || window.anamAi;
+      const createClient = 
+        AnamSDK?.createClientWithSessionToken ||
+        AnamSDK?.AnamClient?.createClientWithSessionToken ||
+        window.createClientWithSessionToken;
 
-      const client = AnamClient.createClientWithSessionToken(session_token);
+      if (!createClient) {
+        console.error('Available window keys:', Object.keys(window).filter(k => k.toLowerCase().includes('anam')));
+        throw new Error('Anam SDK not initialized. Please refresh the page.');
+      }
+
+      const client = createClient(session_token);
       clientRef.current = client;
 
       // Event listeners
