@@ -64,11 +64,16 @@ export default function LiveCoach() {
         setStatus('');
       });
 
-      // Stream to video element
-      await anamClient.streamToVideoElement('rina-video');
-
+      // Show session screen first so video element exists in DOM
       setSessionActive(true);
       setSessionLoading(false);
+      setStatus('Connecting...');
+
+      // Wait for DOM to render video element
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Stream to video element
+      await anamClient.streamToVideoElement('rina-video');
       setStatus('Connected! Start speaking to Rina');
 
     } catch (err) {
@@ -190,7 +195,9 @@ export default function LiveCoach() {
                 id="rina-video"
                 autoPlay
                 playsInline
+                muted={false}
                 className={styles.anamVideo}
+                style={{ width: '100%', maxWidth: '720px', borderRadius: '12px', background: '#000' }}
               />
               <div className={`${styles.speakingIndicator} ${speaking ? styles.speakingActive : ''}`}>
                 {Array.from({ length: 8 }).map((_, i) => (
