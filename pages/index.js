@@ -120,33 +120,23 @@ export default function Home() {
           1. HERO — FULL WIDTH VIDEO
       ══════════════════════════════════════════════════════ */}
       <section className={styles.hero}>
-        {/* VIDEO PLACEHOLDER — replace /public/hero-video.mp4 with AI generated cinematic video
-            Prompt: professional woman speaking → nervous → AI analysis → confident transformation */}
-        {/* HERO VIDEO — replace with AI generated video when ready */}
-        <video
-          className={styles.heroBgVideo}
-          autoPlay muted loop playsInline
-        >
-          
-          <source src="/hero-video2.mp4" type="video/mp4" />
-        </video>
-        <div className={styles.heroOverlay} />
-        <div className={styles.heroContent}>
-          <p className={styles.heroEyebrow}>VOICE CONTROL</p>
-          <h1 className={styles.heroHeading}>
-            Change how the world<br />hears you.
-          </h1>
-          <p className={styles.heroCaps}>
-            Pronunciation · Intonation · Fluency · Presence
-          </p>
-          <button className={styles.heroBtn} onClick={() => router.push('/signup')}>
-            EXPERIENCE VOICE CONTROL →
-          </button>
-        </div>
-        <div className={styles.heroWave}>
-          <Waveform bars={32} color="rgba(201,168,76,0.4)" height={48} />
-        </div>
-      </section>
+  <video
+    className={styles.heroBgVideo}
+    autoPlay muted loop playsInline
+  >
+    <source src="/hero-video2.mp4" type="video/mp4" />
+  </video>
+  <div className={styles.heroOverlay} />
+  <div className={styles.heroContent}>
+    <p className={styles.heroEyebrow}>VOICE CONTROL</p>
+    <button className={styles.heroBtn} onClick={() => router.push('/signup')}>
+      EXPERIENCE VOICE CONTROL →
+    </button>
+  </div>
+  <div className={styles.heroWave}>
+    <Waveform bars={32} color="rgba(201,168,76,0.4)" height={48} />
+  </div>
+</section>
 
       {/* ══════════════════════════════════════════════════════
           2. TECHNOLOGY VISUALS — IVORY BACKGROUND
