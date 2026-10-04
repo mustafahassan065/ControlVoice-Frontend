@@ -116,9 +116,6 @@ export default function Home() {
         )}
       </nav>
 
-      {/* ══════════════════════════════════════════════════════
-          1. HERO — FULL WIDTH VIDEO
-      ══════════════════════════════════════════════════════ */}
       <section className={styles.hero}>
   <video
     className={styles.heroBgVideo}
@@ -127,7 +124,7 @@ export default function Home() {
     <source src="/hero-video2.mp4" type="video/mp4" />
   </video>
   <div className={styles.heroOverlay} />
-  <div className={styles.heroContent}>
+  <div className={styles.heroContent} style={{ paddingTop: '96px' }}>
     <p className={styles.heroEyebrow}>VOICE CONTROL</p>
     <button className={styles.heroBtn} onClick={() => router.push('/signup')}>
       EXPERIENCE VOICE CONTROL →
