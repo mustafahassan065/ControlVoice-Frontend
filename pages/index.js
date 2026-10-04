@@ -128,7 +128,7 @@ export default function Home() {
           autoPlay muted loop playsInline
         >
           
-          <source src="/hero-video.mp4" type="video/mp4" />
+          <source src="/hero-video2.mp4" type="video/mp4" />
         </video>
         <div className={styles.heroOverlay} />
         <div className={styles.heroContent}>
