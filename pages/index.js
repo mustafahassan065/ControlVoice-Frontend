@@ -123,14 +123,50 @@ export default function Home() {
   >
     <source src="/hero-video2.mp4" type="video/mp4" />
   </video>
-  <div className={styles.heroOverlay} />
-  <div className={styles.heroContent} style={{ paddingTop: '96px' }}>
-    <p className={styles.heroEyebrow}>VOICE CONTROL</p>
-    <button className={styles.heroBtn} onClick={() => router.push('/signup')}>
-      EXPERIENCE VOICE CONTROL →
+  
+  {/* Subtle center gradient for text readability */}
+  <div style={{
+    position: 'absolute', inset: 0,
+    background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0.08) 60%, transparent 100%)',
+    zIndex: 1,
+  }} />
+
+  <div className={styles.heroContent} style={{ paddingTop: '96px', position: 'relative', zIndex: 2 }}>
+    <p style={{
+      fontSize: '13px',
+      letterSpacing: '0.35em',
+      textTransform: 'uppercase',
+      color: '#E8C97A',
+      fontWeight: '700',
+      marginBottom: '20px',
+      textShadow: '0 1px 8px rgba(0,0,0,0.4)',
+    }}>
+      VOICE CONTROL
+    </p>
+    <button
+      onClick={() => router.push('/signup')}
+      style={{
+        background: 'transparent',
+        border: '2px solid rgba(255,255,255,0.9)',
+        color: '#FFFFFF',
+        padding: '16px 40px',
+        fontSize: '14px',
+        letterSpacing: '0.15em',
+        textTransform: 'uppercase',
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        fontWeight: '600',
+        transition: 'all 0.3s',
+        textShadow: '0 1px 6px rgba(0,0,0,0.3)',
+      }}
+      onMouseEnter={e => { e.target.style.background = 'rgba(255,255,255,0.12)'; }}
+      onMouseLeave={e => { e.target.style.background = 'transparent'; }}
+    >
+      MEET RINA, YOUR AI VOICE COACH →
     </button>
   </div>
-  <div className={styles.heroWave}>
+
+  <div className={styles.heroWave} style={{ position: 'relative', zIndex: 2 }}>
     <Waveform bars={32} color="rgba(201,168,76,0.4)" height={48} />
   </div>
 </section>
