@@ -23,7 +23,7 @@ function Reveal({ children, className = '', delay = 0 }) {
   );
 }
 
-// ── Animated waveform ────────────────────────────────────────
+// ── Animated waveform 
 function Waveform({ bars = 16, color = '#C9A84C', height = 40 }) {
   return (
     <div className={styles.waveformRow} style={{ height }}>
@@ -131,7 +131,7 @@ export default function Home() {
     zIndex: 1,
   }} />
 
-  <div className={styles.heroContent} style={{ paddingTop: '96px', position: 'relative', zIndex: 2 }}>
+  <div className={styles.heroContent} style={{ paddingTop: '160px', position: 'relative', zIndex: 2 }}>
     <p style={{
       fontSize: '13px',
       letterSpacing: '0.35em',
