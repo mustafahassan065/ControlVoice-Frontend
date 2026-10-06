@@ -131,7 +131,7 @@ export default function Home() {
     zIndex: 1,
   }} />
 
-  <div className={styles.heroContent} style={{ paddingTop: '230px', position: 'relative', zIndex: 2 }}>
+  <div className={styles.heroContent} style={{ paddingTop: '320px', position: 'relative', zIndex: 2 }}>
     <p style={{
       fontSize: '13px',
       letterSpacing: '0.35em',
