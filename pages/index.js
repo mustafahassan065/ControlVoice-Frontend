@@ -121,7 +121,7 @@ export default function Home() {
     className={styles.heroBgVideo}
     autoPlay muted loop playsInline
   >
-    <source src="/hero-video2.mp4" type="video/mp4" />
+    <source src="/hero-video3.mp4" type="video/mp4" />
   </video>
   
   {/* Subtle center gradient for text readability */}
