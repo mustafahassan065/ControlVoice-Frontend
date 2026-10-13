@@ -1,6 +1,43 @@
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from '../styles/Home.module.css';
+
+function useAutoUnmute(ref) {
+  useEffect(() => {
+    if (!ref.current) return;
+    const video = ref.current;
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.intersectionRatio >= 0.6) {
+          video.muted = false;
+          video.play().catch(() => { video.muted = true; video.play(); });
+        } else {
+          video.muted = true;
+        }
+      },
+      { threshold: 0.6 }
+    );
+    obs.observe(video);
+    return () => obs.disconnect();
+  }, []);
+}
+
+function AutoUnmuteVideo({ src, className }) {
+  const ref = useRef(null);
+  useAutoUnmute(ref);
+  return (
+    <video
+      ref={ref}
+      className={className}
+      autoPlay
+      muted
+      loop
+      playsInline
+    >
+      <source src={src} type="video/mp4" />
+    </video>
+  );
+}
 
 export default function Home() {
   const router = useRouter();
@@ -17,6 +54,7 @@ export default function Home() {
           </div>
           <div className={styles.navLinks}>
             <a href="/pricing">Pricing</a>
+            <a href="/programs">Programs</a>
             <a href="/login">Sign In</a>
           </div>
           <button className={styles.navCta} onClick={() => router.push('/signup')}>
@@ -29,6 +67,7 @@ export default function Home() {
         {menuOpen && (
           <div className={styles.mobileNav}>
             <a href="/pricing" onClick={() => setMenuOpen(false)}>Pricing</a>
+            <a href="/programs" onClick={() => setMenuOpen(false)}>Programs</a>
             <a href="/login" onClick={() => setMenuOpen(false)}>Sign In</a>
             <a href="/signup" onClick={() => setMenuOpen(false)}>Start Free</a>
           </div>
@@ -81,11 +120,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── VIDEO 1 — FULL VIEWPORT ── */}
+      {/* ── STATEMENT SECTION ── */}
+      <section className={styles.statementSection}>
+        <p className={styles.statementText}>
+          Your voice is<br />
+          <span>your power.</span>
+        </p>
+        <button className={styles.statementBtn} onClick={() => router.push('/signup')}>
+          START TRAINING →
+        </button>
+      </section>
+
+      {/* ── VIDEO 1 ── */}
       <section className={styles.videoFull}>
-        <video className={styles.videoFullEl} autoPlay muted loop playsInline>
-          <source src="/middle.mp4" type="video/mp4" />
-        </video>
+        <AutoUnmuteVideo src="/middle.mp4" className={styles.videoFullEl} />
       </section>
 
       {/* ── TEXT MOMENT ── */}
@@ -93,16 +141,14 @@ export default function Home() {
         <p className={styles.textMomentLine}>Train your voice.</p>
       </section>
 
-      {/* ── VIDEO 2 — FULL VIEWPORT ── */}
+      {/* ── VIDEO 2 ── */}
       <section className={styles.videoFull}>
-        <video className={styles.videoFullEl} autoPlay muted loop playsInline>
-          <source src="/last.mp4" type="video/mp4" />
-        </video>
+        <AutoUnmuteVideo src="/last.mp4" className={styles.videoFullEl} />
       </section>
 
       {/* ── CTA ── */}
       <section className={styles.ctaSection}>
-        <p className={styles.ctaLine}>Your voice. Elevated.</p>
+        <p className={styles.ctaLine}>Your voice.<br /><span>Elevated.</span></p>
         <button className={styles.ctaBtn} onClick={() => router.push('/signup')}>
           BEGIN YOUR JOURNEY
         </button>
@@ -116,6 +162,7 @@ export default function Home() {
             <div className={styles.footerCol}>
               <p className={styles.footerColHead}>Product</p>
               <a href="/pricing">Pricing</a>
+              <a href="/programs">Programs</a>
               <a href="#">Voice Control Method</a>
             </div>
             <div className={styles.footerCol}>
