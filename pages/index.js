@@ -57,7 +57,7 @@ export default function Home() {
             <a href="/programs">Programs</a>
             <a href="/login">Sign In</a>
           </div>
-          <button className={styles.navCta} onClick={() => router.push('/signup')}>
+          <button className={styles.navCtaGold} onClick={() => router.push('/signup')}>
             Start Free
           </button>
           <button className={styles.burger} onClick={() => setMenuOpen(!menuOpen)}>
@@ -139,6 +139,7 @@ export default function Home() {
       {/* ── TEXT MOMENT ── */}
       <section className={styles.textMoment}>
         <p className={styles.textMomentLine}>Train your voice.</p>
+        <p className={styles.textMomentLineSub}><span>Own the room.</span></p>
       </section>
 
       {/* ── VIDEO 2 ── */}
@@ -150,7 +151,7 @@ export default function Home() {
       <section className={styles.ctaSection}>
         <p className={styles.ctaLine}>Your voice.<br /><span>Elevated.</span></p>
         <button className={styles.ctaBtn} onClick={() => router.push('/signup')}>
-          BEGIN YOUR JOURNEY
+          BEGIN YOUR JOURNEY →
         </button>
       </section>
 
