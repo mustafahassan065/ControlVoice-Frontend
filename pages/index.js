@@ -120,11 +120,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── STATEMENT SECTION ── */}
+      {/* ── STATEMENT SECTION (UPDATED: Added Product Explanation) ── */}
       <section className={styles.statementSection}>
         <p className={styles.statementText}>
           Your voice is<br />
           <span>your power.</span>
+        </p>
+        <p style={{
+          maxWidth: '600px',
+          margin: '20px auto 30px',
+          color: 'rgba(255, 255, 255, 0.8)',
+          fontSize: '16px',
+          lineHeight: '1.6',
+          textAlign: 'center'
+        }}>
+          Struggling with filler words, shaky delivery, or public speaking anxiety? VoiceControl AI provides real-time voice coaching to help you speak with clarity, authority, and unwavering confidence.
         </p>
         <button className={styles.statementBtn} onClick={() => router.push('/signup')}>
           START TRAINING →
@@ -136,10 +146,20 @@ export default function Home() {
         <AutoUnmuteVideo src="/middle1.mp4" className={styles.videoFullEl} />
       </section>
 
-      {/* ── TEXT MOMENT ── */}
+      {/* ── TEXT MOMENT (UPDATED: Added Solution Details) ── */}
       <section className={styles.textMoment}>
         <p className={styles.textMomentLine}>Train your voice.</p>
         <p className={styles.textMomentLineSub}><span>Own the room.</span></p>
+        <p style={{
+          maxWidth: '550px',
+          margin: '20px auto 0',
+          color: 'rgba(255, 255, 255, 0.75)',
+          fontSize: '15px',
+          lineHeight: '1.6',
+          textAlign: 'center'
+        }}>
+          Master your pitch, tone, and pacing with personal AI feedback tailored to your speech patterns. Transform everyday conversations into influential moments.
+        </p>
       </section>
 
       {/* ── VIDEO 2 ── */}
