@@ -120,25 +120,66 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── STATEMENT SECTION ── */}
-      <section className={styles.statementSection}>
+      {/* ── PROBLEM & SOLUTION SECTION ── */}
+      <section className={styles.statementSection} style={{ height: 'auto', padding: '120px 40px' }}>
         <p className={styles.statementText}>
-          Your voice is<br />
-          <span>your power.</span>
+          Master Your Voice.<br />
+          <span>Command Any Room.</span>
         </p>
+
         <p style={{
-          maxWidth: '580px',
-          margin: '-20px auto 0',
+          maxWidth: '720px',
+          margin: '24px auto 0',
           color: 'var(--muted)',
-          fontSize: '16px',
-          lineHeight: '1.6',
+          fontSize: '18px',
+          lineHeight: '1.7',
           textAlign: 'center',
           fontWeight: '400'
         }}>
-          Overcome filler words, shaky delivery, and speaking anxiety with real-time AI feedback designed to make your voice clear, authoritative, and impactful.
+          Public speaking anxiety, filler words, shaky pitch, and weak delivery silent your true potential. 
+          <strong> VoiceControl AI</strong> is your 24/7 personal speech coach—giving you real-time AI feedback 
+          to refine your tone, eliminate vocal flaws, and help you speak with undeniable authority.
         </p>
-        <button className={styles.statementBtn} onClick={() => router.push('/signup')}>
-          START TRAINING →
+
+        {/* 3 Key Benefits Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: '32px',
+          maxWidth: '1100px',
+          width: '100%',
+          marginTop: '60px'
+        }}>
+          <div style={{ padding: '24px', textAlign: 'center', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <h3 style={{ fontSize: '20px', fontFamily: 'var(--font-display)', marginBottom: '12px', color: 'var(--text)' }}>
+              Real-Time AI Feedback
+            </h3>
+            <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.6', margin: 0 }}>
+              Practice speeches, presentations, or daily conversations while AI analyzes your pitch, pace, and vocal clarity instantly.
+            </p>
+          </div>
+
+          <div style={{ padding: '24px', textAlign: 'center', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <h3 style={{ fontSize: '20px', fontFamily: 'var(--font-display)', marginBottom: '12px', color: 'var(--text)' }}>
+              Eliminate Filler Words
+            </h3>
+            <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.6', margin: 0 }}>
+              Say goodbye to &ldquo;umms,&rdquo; &ldquo;ahhs,&rdquo; and nervous pauses. Build smooth, persuasive speech habits effortlessly.
+            </p>
+          </div>
+
+          <div style={{ padding: '24px', textAlign: 'center', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <h3 style={{ fontSize: '20px', fontFamily: 'var(--font-display)', marginBottom: '12px', color: 'var(--text)' }}>
+              Tailored Coaching Sessions
+            </h3>
+            <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.6', margin: 0 }}>
+              Work with <strong>Rina</strong>, your AI voice coach, through custom drills tailored to your specific communication goals.
+            </p>
+          </div>
+        </div>
+
+        <button className={styles.statementBtn} style={{ marginTop: '50px' }} onClick={() => router.push('/signup')}>
+          START FREE TRAINING →
         </button>
       </section>
 
@@ -147,21 +188,43 @@ export default function Home() {
         <AutoUnmuteVideo src="/middle1.mp4" className={styles.videoFullEl} />
       </section>
 
-      {/* ── TEXT MOMENT ── */}
-      <section className={styles.textMoment}>
-        <p className={styles.textMomentLine}>Train your voice.</p>
-        <p className={styles.textMomentLineSub}><span>Own the room.</span></p>
-        <p style={{
-          maxWidth: '540px',
-          margin: '24px auto 0',
-          color: 'var(--muted)',
-          fontSize: '15px',
-          lineHeight: '1.6',
-          textAlign: 'center',
-          fontWeight: '400'
+      {/* ── HOW IT WORKS SECTION ── */}
+      <section className={styles.textMoment} style={{ height: 'auto', padding: '120px 40px' }}>
+        <p className={styles.textMomentLine}>How VoiceControl Works</p>
+        <p className={styles.textMomentLineSub}><span>3 Steps to Vocal Excellence</span></p>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '40px',
+          maxWidth: '1100px',
+          width: '100%',
+          marginTop: '60px'
         }}>
-          Master your tone, pitch, and pacing dynamically. Transform everyday communication into moments of absolute influence.
-        </p>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '36px', color: 'var(--gold)', fontWeight: '700', fontFamily: 'var(--font-display)', marginBottom: '12px' }}>01</div>
+            <h4 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px', color: 'var(--text)' }}>Record or Speak Live</h4>
+            <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.6' }}>
+              Speak naturally into your device during practice drills, meeting prep, or presentation rehearsals.
+            </p>
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '36px', color: 'var(--gold)', fontWeight: '700', fontFamily: 'var(--font-display)', marginBottom: '12px' }}>02</div>
+            <h4 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px', color: 'var(--text)' }}>Instant AI Diagnostics</h4>
+            <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.6' }}>
+              Get detailed metrics on tone, projection, cadence, filler words, and audience engagement impact.
+            </p>
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '36px', color: 'var(--gold)', fontWeight: '700', fontFamily: 'var(--font-display)', marginBottom: '12px' }}>03</div>
+            <h4 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px', color: 'var(--text)' }}>Transform &amp; Own The Room</h4>
+            <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.6' }}>
+              Apply AI insights to continuously refine your voice and deliver high-impact presentations every time.
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* ── VIDEO 2 ── */}
@@ -169,11 +232,21 @@ export default function Home() {
         <AutoUnmuteVideo src="/last1.mp4" className={styles.videoFullEl} />
       </section>
 
-      {/* ── CTA ── */}
-      <section className={styles.ctaSection}>
-        <p className={styles.ctaLine}>Your voice.<br /><span>Elevated.</span></p>
+      {/* ── FINAL CTA SECTION ── */}
+      <section className={styles.ctaSection} style={{ height: 'auto', padding: '120px 40px' }}>
+        <p className={styles.ctaLine}>Ready to elevate<br /><span>your voice?</span></p>
+        <p style={{
+          maxWidth: '600px',
+          margin: '20px auto 0',
+          color: 'var(--muted)',
+          fontSize: '16px',
+          lineHeight: '1.6',
+          textAlign: 'center'
+        }}>
+          Join thousands of executives, creators, and public speakers using VoiceControl AI to turn their speech into their greatest asset.
+        </p>
         <button className={styles.ctaBtn} onClick={() => router.push('/signup')}>
-          BEGIN YOUR JOURNEY →
+          BEGIN YOUR FREE JOURNEY →
         </button>
       </section>
 
