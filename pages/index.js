@@ -133,7 +133,7 @@ export default function Home() {
 
       {/* ── VIDEO 1 ── */}
       <section className={styles.videoFull}>
-        <AutoUnmuteVideo src="/middle.mp4" className={styles.videoFullEl} />
+        <AutoUnmuteVideo src="/middle1.mp4" className={styles.videoFullEl} />
       </section>
 
       {/* ── TEXT MOMENT ── */}
@@ -144,7 +144,7 @@ export default function Home() {
 
       {/* ── VIDEO 2 ── */}
       <section className={styles.videoFull}>
-        <AutoUnmuteVideo src="/last.mp4" className={styles.videoFullEl} />
+        <AutoUnmuteVideo src="/last1.mp4" className={styles.videoFullEl} />
       </section>
 
       {/* ── CTA ── */}
