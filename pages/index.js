@@ -1,4 +1,3 @@
-
 import { useRouter } from 'next/router';
 import { useState, useEffect, useRef } from 'react';
 import styles from '../styles/Home.module.css';
@@ -85,10 +84,6 @@ export default function Home() {
           background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0.08) 60%, transparent 100%)',
           zIndex: 1,
         }} />
-        <div className={styles.videoStoryCaption}>
-          <span className={styles.videoStoryEyebrow}>01 / THE STRUGGLE</span>
-          <p>She struggled to make her voice heard.</p>
-        </div>
         <div className={styles.heroContent} style={{ paddingTop: '515px', position: 'relative', zIndex: 2 }}>
           <p style={{
             fontSize: '13px',
@@ -122,6 +117,10 @@ export default function Home() {
           >
             MEET RINA, YOUR AI VOICE COACH →
           </button>
+          <div className={`${styles.videoStoryCaption} ${styles.heroStoryCaption}`}>
+            <span className={styles.videoStoryEyebrow}>01 / THE STRUGGLE</span>
+            <p>She struggled to make her voice heard.</p>
+          </div>
         </div>
       </section>
 
@@ -141,8 +140,8 @@ export default function Home() {
           textAlign: 'center',
           fontWeight: '400'
         }}>
-          Public speaking anxiety, filler words, shaky pitch, and weak delivery silent your true potential.
-          <strong> VoiceControl AI</strong> is your 24/7 personal speech coach—giving you real-time AI feedback
+          Public speaking anxiety, filler words, shaky pitch, and weak delivery silent your true potential. 
+          <strong> VoiceControl AI</strong> is your 24/7 personal speech coach—giving you real-time AI feedback 
           to refine your tone, eliminate vocal flaws, and help you speak with undeniable authority.
         </p>
 

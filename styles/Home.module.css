@@ -241,14 +241,24 @@
 .videoStoryCaption {
   position: absolute;
   z-index: 3;
-  top: clamp(34px, 6.5vh, 76px);
   left: 24px;
   right: 24px;
+  bottom: clamp(35px, 7vh, 85px);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   pointer-events: none;
+  padding: 0 18px;
+}
+
+/* Hero caption sits directly below the existing CTA button. */
+.heroStoryCaption {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  margin-top: clamp(28px, 4vh, 48px);
   padding: 0 18px;
 }
 
@@ -279,8 +289,13 @@
 }
 
 @media (max-width: 600px) {
+  .heroStoryCaption {
+    margin-top: 26px;
+    padding: 0 10px;
+  }
+
   .videoStoryCaption {
-    top: 30px;
+    bottom: 30px;
     padding: 0 10px;
   }
 
