@@ -190,7 +190,7 @@ export default function Home() {
       {/* ── VIDEO 1 ── */}
       <section className={styles.videoFull}>
         <AutoUnmuteVideo src="/middle1.mp4" className={styles.videoFullEl} />
-        <div className={styles.videoStoryCaption}>
+        <div className={`${styles.videoStoryCaption} ${styles.challengeStoryCaption}`}>
           <span className={styles.videoStoryEyebrow}>02 / THE CHANGE</span>
           <p>Then she met Rina, her AI Voice Coach.</p>
         </div>

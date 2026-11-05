@@ -252,6 +252,11 @@
   padding: 0 18px;
 }
 
+/* Raise only the challenge/change video caption to clear its lower on-video text. */
+.challengeStoryCaption {
+  bottom: clamp(105px, 14vh, 155px);
+}
+
 /* Hero caption sits directly below the existing CTA button. */
 .heroStoryCaption {
   position: relative;
@@ -297,6 +302,10 @@
   .videoStoryCaption {
     bottom: 30px;
     padding: 0 10px;
+  }
+
+  .challengeStoryCaption {
+    bottom: 76px;
   }
 
   .videoStoryEyebrow {
