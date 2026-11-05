@@ -75,45 +75,20 @@ export default function Home() {
       </nav>
 
       {/* ── HERO — UNTOUCHED ── */}
+      {/* ── HERO SECTION ── */}
       <section className={styles.hero}>
         <video className={styles.heroBgVideo} autoPlay muted loop playsInline>
           <source src="/hero4.mp4" type="video/mp4" />
         </video>
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0.08) 60%, transparent 100%)',
-          zIndex: 1,
-        }} />
-        <div className={styles.heroContent} style={{ paddingTop: '515px', position: 'relative', zIndex: 2 }}>
-          <p style={{
-            fontSize: '13px',
-            letterSpacing: '0.35em',
-            textTransform: 'uppercase',
-            color: '#E8C97A',
-            fontWeight: '700',
-            marginBottom: '20px',
-            textShadow: '0 1px 8px rgba(0,0,0,0.4)',
-          }}>
+        <div className={styles.heroOverlay} />
+        
+        <div className={styles.heroContent}>
+          <p className={styles.heroEyebrow}>
             VOICE CONTROL
           </p>
           <button
+            className={styles.heroMainBtn}
             onClick={() => router.push('/signup')}
-            style={{
-              background: 'transparent',
-              border: '2px solid rgba(255,255,255,0.9)',
-              color: '#FFFFFF',
-              padding: '16px 40px',
-              fontSize: '14px',
-              letterSpacing: '0.15em',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontWeight: '600',
-              transition: 'all 0.3s',
-              textShadow: '0 1px 6px rgba(0,0,0,0.3)',
-            }}
-            onMouseEnter={e => { e.target.style.background = 'rgba(255,255,255,0.12)'; }}
-            onMouseLeave={e => { e.target.style.background = 'transparent'; }}
           >
             MEET RINA, YOUR AI VOICE COACH →
           </button>
