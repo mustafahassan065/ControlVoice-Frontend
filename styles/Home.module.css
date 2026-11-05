@@ -102,11 +102,12 @@
 .statementBtn:hover { background: #2a2a2a; }
 
 /* ══ FULL-VIEWPORT VIDEO ═════════════════════════════════ */
+/* ══ FULL-VIEWPORT VIDEO ═════════════════════════════════ */
 .videoFull {
   position: relative;
   width: 100%;
-  height: 100vh;
-  min-height: 600px;
+  aspect-ratio: 16 / 9;      /* apni video ka asal ratio yahan likho */
+  max-height: 100vh;         /* bohot lambi screen par bhi na barhe */
   overflow: hidden;
   background: #000;
   display: block;
@@ -118,8 +119,9 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;       /* cover ki jagah contain: kuch crop nahi hoga */
   display: block;
+  background: #000;
 }
 
 /* ══ TEXT MOMENT ═════════════════════════════════════════ */
@@ -220,7 +222,7 @@
   .navLinks { display: none; }
   .navCta { display: none; }
   .burger { display: flex; }
-  .videoFull { height: 70vh; min-height: 400px; }
+  .videoFull { height: auto; min-height: 0; aspect-ratio: 16 / 9; }
   .statementSection { height: auto; padding: 100px 32px; }
   .textMoment { height: auto; padding: 80px 32px; }
   .ctaSection { height: auto; padding: 100px 32px; }
@@ -228,7 +230,7 @@
 }
 @media (max-width: 600px) {
   .navInner { padding: 0 24px; }
-  .videoFull { height: 60vh; min-height: 320px; }
+  .videoFull { height: auto; min-height: 0; aspect-ratio: 16 / 9; }
   .statementSection { padding: 80px 24px; gap: 40px; }
   .textMoment { padding: 64px 24px; }
   .ctaSection { padding: 80px 24px; gap: 40px; }
