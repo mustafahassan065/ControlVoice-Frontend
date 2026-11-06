@@ -93,7 +93,7 @@ export default function Home() {
             MEET RINA, YOUR AI VOICE COACH →
           </button>
           <div className={`${styles.videoStoryCaption} ${styles.heroStoryCaption}`}>
-            <span className={styles.videoStoryEyebrow}>01 / THE STRUGGLE</span>
+            
             <p>She struggled to make her voice heard.</p>
           </div>
         </div>
@@ -166,7 +166,7 @@ export default function Home() {
       <section className={styles.videoFull}>
         <AutoUnmuteVideo src="/middle1.mp4" className={styles.videoFullEl} />
         <div className={`${styles.videoStoryCaption} ${styles.challengeStoryCaption}`}>
-          <span className={styles.videoStoryEyebrow}>02 / THE CHANGE</span>
+          
           <p>Then she met Rina, her AI Voice Coach.</p>
         </div>
       </section>
@@ -214,7 +214,7 @@ export default function Home() {
       <section className={styles.videoFull}>
         <AutoUnmuteVideo src="/last1.mp4" className={styles.videoFullEl} />
         <div className={styles.videoStoryCaption}>
-          <span className={styles.videoStoryEyebrow}>03 / THE SUCCESS</span>
+          
           <p>Now she speaks. And the room listens.</p>
         </div>
       </section>
