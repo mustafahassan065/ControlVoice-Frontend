@@ -7,30 +7,26 @@ export default function LiveCoach() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sessionLoading, setSessionLoading] = useState(false);
-  const [sessionActive, setSessionActive] = useState(false);
-  const [status, setStatus] = useState('');
+  const [conversationUrl, setConversationUrl] = useState(null);
   const [error, setError] = useState('');
-  const [speaking, setSpeaking] = useState(false);
-  const [listening, setListening] = useState(false);
-  const clientRef = useRef(null);
+  const [sessionActive, setSessionActive] = useState(false);
+  const iframeRef = useRef(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) { router.push('/login'); return; }
+
     const userData = localStorage.getItem('user');
     if (userData) setUser(JSON.parse(userData));
+
     setLoading(false);
   }, []);
 
   async function startSession() {
     setSessionLoading(true);
     setError('');
-    setStatus('Creating session...');
-
     try {
       const token = localStorage.getItem('token');
-
-      // Get session token from our backend
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/live-coach/start`, {
         method: 'POST',
         headers: {
@@ -38,72 +34,29 @@ export default function LiveCoach() {
           Authorization: `Bearer ${token}`,
         },
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Failed to start session');
-
-      const { session_token } = data;
-      setStatus('Connecting to Rina...');
-
-      // Import Anam SDK using main entry
-      const AnamSDK = await import('@anam-ai/js-sdk/dist/main/index.js');
-      const createClient = AnamSDK.createClient || AnamSDK.default?.createClient;
-
-      const anamClient = createClient(session_token);
-      clientRef.current = anamClient;
-
-      // Event listeners
-      anamClient.addListener('AVATAR_STARTED_TALKING', () => setSpeaking(true));
-      anamClient.addListener('AVATAR_STOPPED_TALKING', () => setSpeaking(false));
-      anamClient.addListener('USER_START_TALKING', () => setListening(true));
-      anamClient.addListener('USER_STOP_TALKING', () => setListening(false));
-      anamClient.addListener('CONNECTION_CLOSED', () => {
-        setSessionActive(false);
-        setSpeaking(false);
-        setListening(false);
-        setStatus('');
-      });
-
-      // Show session screen first so video element exists in DOM
+      setConversationUrl(data.conversation_url);
       setSessionActive(true);
-      setSessionLoading(false);
-      setStatus('Connecting...');
-
-      // Wait for DOM to render video element
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      // Stream to video element
-      await anamClient.streamToVideoElement('rina-video');
-      setStatus('Connected! Start speaking to Rina');
-
     } catch (err) {
-      console.error('Session error:', err);
-      setError(err.message || 'Failed to connect. Please try again.');
+      setError(err.message);
+    } finally {
       setSessionLoading(false);
-      setStatus('');
     }
   }
 
   async function endSession() {
-    try {
-      if (clientRef.current) {
-        clientRef.current.stopStreaming();
-        clientRef.current = null;
-      }
-    } catch {}
-
     try {
       const token = localStorage.getItem('token');
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/live-coach/end-session`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
-    } catch {}
-
+    } catch (err) {
+      console.error('End session error:', err);
+    }
+    setConversationUrl(null);
     setSessionActive(false);
-    setSpeaking(false);
-    setListening(false);
-    setStatus('');
   }
 
   if (loading) {
@@ -158,22 +111,38 @@ export default function LiveCoach() {
                 </p>
 
                 <div className={styles.featureList}>
-                  <div className={styles.featureItem}><span>🎯</span><span>Personalized to your actual voice scores</span></div>
-                  <div className={styles.featureItem}><span>🎙️</span><span>Speak freely — coach listens and responds live</span></div>
-                  <div className={styles.featureItem}><span>📊</span><span>Coach knows your Authority Score, weaknesses, and progress</span></div>
-                  <div className={styles.featureItem}><span>💡</span><span>Get specific exercises based on your data</span></div>
+                  <div className={styles.featureItem}>
+                    <span>🎯</span>
+                    <span>Personalized to your actual voice scores</span>
+                  </div>
+                  <div className={styles.featureItem}>
+                    <span>🎙️</span>
+                    <span>Speak freely — coach listens and responds live</span>
+                  </div>
+                  <div className={styles.featureItem}>
+                    <span>📊</span>
+                    <span>Coach knows your Authority Score, weaknesses, and progress</span>
+                  </div>
+                  <div className={styles.featureItem}>
+                    <span>💡</span>
+                    <span>Get specific exercises based on your data</span>
+                  </div>
                 </div>
 
-                {status && <p style={{ color: '#C9A84C', fontSize: '14px', marginTop: '12px' }}>{status}</p>}
                 {error && <div className={styles.errorBox}>{error}</div>}
 
-                <button className={styles.startBtn} onClick={startSession} disabled={sessionLoading}>
+                <button
+                  className={styles.startBtn}
+                  onClick={startSession}
+                  disabled={sessionLoading}
+                >
                   {sessionLoading ? (
-                    <><div className={styles.spinnerSmall}></div> {status || 'Starting...'}</>
+                    <><div className={styles.spinnerSmall}></div> Starting Session...</>
                   ) : (
                     <>🎙️ Start Live Coaching Session</>
                   )}
                 </button>
+
                 <p className={styles.hint}>Allow microphone access when prompted</p>
               </div>
             </div>
@@ -185,25 +154,17 @@ export default function LiveCoach() {
                 <span className={styles.liveDot}></span>
                 <span>Live Session Active</span>
               </div>
-              <p className={styles.sessionSub}>
-                {speaking ? '🎓 Rina is speaking...' : listening ? '👂 Rina is listening...' : 'Speak naturally'}
-              </p>
+              <p className={styles.sessionSub}>Your AI Voice Coach is ready — speak naturally</p>
             </div>
 
-            <div className={styles.anamVideoWrap}>
-              <video
-                id="rina-video"
-                autoPlay
-                playsInline
-                muted={false}
-                className={styles.anamVideo}
-                style={{ width: '100%', maxWidth: '720px', borderRadius: '12px', background: '#000' }}
+            <div className={styles.iframeWrap}>
+              <iframe
+                ref={iframeRef}
+                src={conversationUrl}
+                allow="camera; microphone; fullscreen; display-capture"
+                className={styles.coachIframe}
+                title="AI Voice Coach"
               />
-              <div className={`${styles.speakingIndicator} ${speaking ? styles.speakingActive : ''}`}>
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <span key={i} className={styles.speakBar} style={{ '--si': i }} />
-                ))}
-              </div>
             </div>
 
             <div className={styles.sessionTips}>
