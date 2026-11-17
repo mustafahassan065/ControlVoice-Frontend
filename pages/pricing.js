@@ -10,7 +10,7 @@ const PLANS = [
     period: '',
     color: 'var(--text-dim)',
     features: [
-      { text: '1 voice analysis', included: true },
+      { text: '3 voice analyses', included: true },
       { text: 'Authority Score report', included: true },
       { text: 'Daily exercises', included: false },
       { text: 'Progress tracking', included: false },
