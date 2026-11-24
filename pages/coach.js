@@ -11,7 +11,13 @@ export default function Coach() {
   const [remaining, setRemaining] = useState(null);
   const [plan, setPlan] = useState('free');
   const [limitReached, setLimitReached] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [voiceError, setVoiceError] = useState('');
   const messagesEndRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const streamRef = useRef(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -19,6 +25,13 @@ export default function Coach() {
     const userData = localStorage.getItem('user');
     if (userData) setPlan(JSON.parse(userData).plan || 'free');
     fetchQuickPrompts(token);
+
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      streamRef.current?.getTracks().forEach(track => track.stop());
+    };
   }, []);
 
   useEffect(() => {
@@ -59,7 +72,7 @@ export default function Coach() {
         return;
       }
 
-      if (!res.ok) throw new Error('Failed to get response');
+      if (!res.ok) throw new Error(data.detail || 'Failed to get response');
 
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
       if (data.remaining !== null) setRemaining(data.remaining);
@@ -71,7 +84,119 @@ export default function Coach() {
     }
   }
 
+  async function transcribeAndSend(blob) {
+    if (!blob || blob.size === 0) {
+      setVoiceError('No audio was captured. Please try recording again.');
+      return;
+    }
+
+    setIsTranscribing(true);
+    setVoiceError('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      const extension = blob.type.includes('mp4') ? 'mp4' : blob.type.includes('ogg') ? 'ogg' : 'webm';
+      formData.append('audio', blob, `voice-question.${extension}`);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coach/transcribe`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await response.json();
+
+      if (response.status === 403 && data.detail?.error === 'daily_limit_reached') {
+        setLimitReached(true);
+        return;
+      }
+      if (!response.ok) {
+        throw new Error(typeof data.detail === 'string' ? data.detail : 'Voice transcription failed.');
+      }
+
+      const transcript = (data.text || '').trim();
+      if (!transcript) {
+        setVoiceError("I couldn't hear any speech. Please try again.");
+        return;
+      }
+
+      await sendMessage(transcript);
+    } catch (err) {
+      console.error('Voice transcription error:', err);
+      setVoiceError(err.message || 'Could not process your recording. Please try again.');
+    } finally {
+      setIsTranscribing(false);
+    }
+  }
+
+  async function toggleRecording() {
+    setVoiceError('');
+
+    if (isRecording) {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      setIsRecording(false);
+      return;
+    }
+
+    if (loading || isTranscribing || limitReached) return;
+
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setVoiceError('Voice recording is not supported in this browser. Please use an updated browser over HTTPS.');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      audioChunksRef.current = [];
+
+      const preferredType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
+        .find(type => MediaRecorder.isTypeSupported(type));
+      const recorder = preferredType
+        ? new MediaRecorder(stream, { mimeType: preferredType })
+        : new MediaRecorder(stream);
+
+      mediaRecorderRef.current = recorder;
+      recorder.ondataavailable = event => {
+        if (event.data && event.data.size > 0) audioChunksRef.current.push(event.data);
+      };
+      recorder.onerror = event => {
+        console.error('MediaRecorder error:', event.error);
+        setVoiceError('Recording failed. Please check your microphone and try again.');
+        setIsRecording(false);
+        stream.getTracks().forEach(track => track.stop());
+      };
+      recorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: recorder.mimeType || 'audio/webm',
+        });
+        audioChunksRef.current = [];
+        stream.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+        transcribeAndSend(audioBlob);
+      };
+
+      recorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Microphone access error:', err);
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setVoiceError('Microphone permission was denied. Allow microphone access in your browser settings and try again.');
+      } else if (err.name === 'NotFoundError') {
+        setVoiceError('No microphone was found. Connect a microphone and try again.');
+      } else {
+        setVoiceError('Could not start recording. Please check your microphone and try again.');
+      }
+    }
+  }
+
   async function resetConversation() {
+    if (isRecording && mediaRecorderRef.current?.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
     try {
       const token = localStorage.getItem('token');
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coach/reset`, {
@@ -80,6 +205,8 @@ export default function Coach() {
       setMessages([]);
     } catch (err) { console.error(err); }
   }
+
+  const voiceBusy = isTranscribing || loading;
 
   return (
     <div className={styles.page}>
@@ -146,7 +273,7 @@ export default function Coach() {
                 </div>
               </div>
             ))}
-            {loading && (
+            {(loading || isTranscribing) && (
               <div className={`${styles.message} ${styles.messageAssistant}`}>
                 <div className={styles.messageAvatar}>🎓</div>
                 <div className={styles.messageBubble}>
@@ -174,26 +301,78 @@ export default function Coach() {
           )}
 
           {/* INPUT */}
-          <div className={styles.inputRow}>
-            <input
-              className={styles.chatInput}
-              type="text"
-              placeholder="Ask your coach anything about your voice..."
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-              disabled={loading || limitReached}
-            />
-            <button
-              className={styles.sendBtn}
-              onClick={() => sendMessage()}
-              disabled={loading || !input.trim() || limitReached}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="22" y1="2" x2="11" y2="13"/>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-              </svg>
-            </button>
+          <div>
+            {isRecording && (
+              <p style={{ color: '#e5484d', fontSize: '13px', margin: '0 0 10px', textAlign: 'center' }}>
+                ● Recording… Click the microphone again to stop.
+              </p>
+            )}
+            {isTranscribing && (
+              <p style={{ color: 'inherit', opacity: 0.75, fontSize: '13px', margin: '0 0 10px', textAlign: 'center' }}>
+                Processing your voice…
+              </p>
+            )}
+            {voiceError && (
+              <p role="alert" style={{ color: '#e5484d', fontSize: '13px', margin: '0 0 10px', textAlign: 'center' }}>
+                {voiceError}
+              </p>
+            )}
+            <div className={styles.inputRow}>
+              <input
+                className={styles.chatInput}
+                type="text"
+                placeholder="Ask your coach anything about your voice..."
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                disabled={voiceBusy || isRecording || limitReached}
+              />
+              <button
+                type="button"
+                onClick={toggleRecording}
+                disabled={voiceBusy || limitReached}
+                aria-label={isRecording ? 'Stop voice recording' : 'Start voice recording'}
+                title={isRecording ? 'Stop recording' : 'Record a voice question'}
+                style={{
+                  width: '46px',
+                  height: '46px',
+                  minWidth: '46px',
+                  border: 'none',
+                  borderRadius: '50%',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: voiceBusy || limitReached ? 'not-allowed' : 'pointer',
+                  color: '#ffffff',
+                  background: isRecording ? '#dc2626' : '#263746',
+                  opacity: voiceBusy || limitReached ? 0.55 : 1,
+                  boxShadow: isRecording ? '0 0 0 5px rgba(220, 38, 38, 0.16)' : 'none',
+                  transition: 'all 0.2s ease',
+                  flexShrink: 0,
+                }}
+              >
+                {isRecording ? (
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <rect x="6" y="6" width="12" height="12" rx="2" />
+                  </svg>
+                ) : (
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="9" y="2" width="6" height="12" rx="3" />
+                    <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8" />
+                  </svg>
+                )}
+              </button>
+              <button
+                className={styles.sendBtn}
+                onClick={() => sendMessage()}
+                disabled={voiceBusy || isRecording || !input.trim() || limitReached}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </main>
