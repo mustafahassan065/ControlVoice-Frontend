@@ -13,6 +13,7 @@ export default function Coach() {
   const [limitReached, setLimitReached] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [voiceError, setVoiceError] = useState('');
   const messagesEndRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -37,6 +38,24 @@ export default function Coach() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Keep the recording timer in sync while the microphone is active.
+  useEffect(() => {
+    if (!isRecording) return;
+
+    const startedAt = Date.now();
+    const timer = setInterval(() => {
+      setRecordingSeconds(Math.floor((Date.now() - startedAt) / 1000));
+    }, 250);
+
+    return () => clearInterval(timer);
+  }, [isRecording]);
+
+  function formatRecordingTime(totalSeconds) {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
 
   async function fetchQuickPrompts(token) {
     try {
@@ -151,6 +170,7 @@ export default function Coach() {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       audioChunksRef.current = [];
+      setRecordingSeconds(0);
 
       const preferredType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
         .find(type => MediaRecorder.isTypeSupported(type));
@@ -258,7 +278,61 @@ export default function Coach() {
           <div className={styles.messages}>
             {messages.length === 0 && (
               <div className={styles.emptyChat}>
-                <span className={styles.emptyChatIcon}>🎙️</span>
+                <button
+                  type="button"
+                  className={styles.emptyChatIcon}
+                  onClick={toggleRecording}
+                  disabled={voiceBusy || limitReached}
+                  aria-label={isRecording ? 'Stop voice recording' : 'Start voice recording'}
+                  title={isRecording ? 'Stop recording' : 'Record a voice question'}
+                  style={{
+                    border: 'none',
+                    cursor: voiceBusy || limitReached ? 'not-allowed' : 'pointer',
+                    opacity: voiceBusy || limitReached ? 0.55 : 1,
+                    background: isRecording ? 'rgba(220, 38, 38, 0.12)' : 'transparent',
+                    color: isRecording ? '#dc2626' : 'inherit',
+                    borderRadius: '50%',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {isRecording ? (
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <rect x="6" y="6" width="12" height="12" rx="2" />
+                    </svg>
+                  ) : (
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="9" y="2" width="6" height="12" rx="3" />
+                      <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8" />
+                    </svg>
+                  )}
+                </button>
+                {isRecording && (
+                  <p
+                    aria-live="off"
+                    style={{
+                      color: '#dc2626',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      fontVariantNumeric: 'tabular-nums',
+                      margin: '8px 0 0',
+                    }}
+                  >
+                    Recording · {formatRecordingTime(recordingSeconds)}
+                  </p>
+                )}
+                {isTranscribing && (
+                  <p style={{ color: 'inherit', opacity: 0.75, fontSize: '13px', margin: '8px 0 0' }}>
+                    Processing your voice…
+                  </p>
+                )}
+                {voiceError && (
+                  <p role="alert" style={{ color: '#e5484d', fontSize: '13px', margin: '8px 0 0' }}>
+                    {voiceError}
+                  </p>
+                )}
                 <p className={styles.emptyChatTitle}>Your personal voice coach is ready.</p>
                 <p className={styles.emptyChatSub}>Ask anything about your voice assessment, scores, or how to improve.</p>
               </div>
@@ -302,17 +376,7 @@ export default function Coach() {
 
           {/* INPUT */}
           <div>
-            {isRecording && (
-              <p style={{ color: '#e5484d', fontSize: '13px', margin: '0 0 10px', textAlign: 'center' }}>
-                ● Recording… Click the microphone again to stop.
-              </p>
-            )}
-            {isTranscribing && (
-              <p style={{ color: 'inherit', opacity: 0.75, fontSize: '13px', margin: '0 0 10px', textAlign: 'center' }}>
-                Processing your voice…
-              </p>
-            )}
-            {voiceError && (
+            {voiceError && messages.length > 0 && (
               <p role="alert" style={{ color: '#e5484d', fontSize: '13px', margin: '0 0 10px', textAlign: 'center' }}>
                 {voiceError}
               </p>
@@ -325,47 +389,12 @@ export default function Coach() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                disabled={voiceBusy || isRecording || limitReached}
-              />
-              <button
-                type="button"
-                onClick={toggleRecording}
                 disabled={voiceBusy || limitReached}
-                aria-label={isRecording ? 'Stop voice recording' : 'Start voice recording'}
-                title={isRecording ? 'Stop recording' : 'Record a voice question'}
-                style={{
-                  width: '46px',
-                  height: '46px',
-                  minWidth: '46px',
-                  border: 'none',
-                  borderRadius: '50%',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: voiceBusy || limitReached ? 'not-allowed' : 'pointer',
-                  color: '#ffffff',
-                  background: isRecording ? '#dc2626' : '#263746',
-                  opacity: voiceBusy || limitReached ? 0.55 : 1,
-                  boxShadow: isRecording ? '0 0 0 5px rgba(220, 38, 38, 0.16)' : 'none',
-                  transition: 'all 0.2s ease',
-                  flexShrink: 0,
-                }}
-              >
-                {isRecording ? (
-                  <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <rect x="6" y="6" width="12" height="12" rx="2" />
-                  </svg>
-                ) : (
-                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <rect x="9" y="2" width="6" height="12" rx="3" />
-                    <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8" />
-                  </svg>
-                )}
-              </button>
+              />
               <button
                 className={styles.sendBtn}
                 onClick={() => sendMessage()}
-                disabled={voiceBusy || isRecording || !input.trim() || limitReached}
+                disabled={voiceBusy || !input.trim() || limitReached}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="22" y1="2" x2="11" y2="13"/>
