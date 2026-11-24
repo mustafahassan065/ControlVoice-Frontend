@@ -382,6 +382,38 @@ export default function Coach() {
               </p>
             )}
             <div className={styles.inputRow}>
+              <button
+                type="button"
+                onClick={toggleRecording}
+                disabled={voiceBusy || limitReached}
+                aria-label={isRecording ? 'Stop voice recording' : 'Start voice recording'}
+                title={isRecording ? 'Stop recording' : 'Record a voice question'}
+                style={{
+                  border: 'none',
+                  cursor: voiceBusy || limitReached ? 'not-allowed' : 'pointer',
+                  opacity: voiceBusy || limitReached ? 0.55 : 1,
+                  background: isRecording ? 'rgba(220, 38, 38, 0.12)' : 'transparent',
+                  color: isRecording ? '#dc2626' : 'inherit',
+                  borderRadius: '50%',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease',
+                  padding: '10px',
+                  flexShrink: 0,
+                }}
+              >
+                {isRecording ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <rect x="6" y="6" width="12" height="12" rx="2" />
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="9" y="2" width="6" height="12" rx="3" />
+                    <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8" />
+                  </svg>
+                )}
+              </button>
               <input
                 className={styles.chatInput}
                 type="text"
