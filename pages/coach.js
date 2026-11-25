@@ -228,212 +228,287 @@ export default function Coach() {
 
   const voiceBusy = isTranscribing || loading;
 
+  // --- DESIGN SPECIFIC VARIABLES ---
+  const themeColors = {
+    bg: '#0a101d',
+    cardBg: '#111a2b',
+    border: '#1e293b',
+    gold: '#d4af37',
+    goldHover: '#b8962e',
+    textMuted: '#94a3b8',
+    textLight: '#f8fafc',
+  };
+
   return (
-    <div className={styles.page}>
-      <nav className={styles.navbar}>
-        <div className={styles.navInner}>
-          <div className={styles.logo} onClick={() => router.push('/')}>
-            <div className={styles.logoIcon}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M2 12h2M6 8v8M10 5v14M14 9v6M18 7v10M22 12h-2"/>
-              </svg>
-            </div>
-            <span className={styles.logoText}>Voice<span>Control</span> AI</span>
+    <div style={{ backgroundColor: themeColors.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      
+      {/* NAVBAR */}
+      <nav style={{ borderBottom: `1px solid ${themeColors.border}`, padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '12px' }} onClick={() => router.push('/')}>
+          <div style={{ backgroundColor: 'rgba(212, 175, 55, 0.1)', padding: '8px', borderRadius: '8px', color: themeColors.gold, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M2 12h2M6 8v8M10 5v14M14 9v6M18 7v10M22 12h-2"/>
+            </svg>
           </div>
-          <div className={styles.navRight}>
-            <button className={styles.btnGhost} onClick={() => router.push('/dashboard')}>Dashboard</button>
-            {messages.length > 0 && (
-              <button className={styles.btnGhost} onClick={resetConversation}>New Chat</button>
-            )}
-          </div>
+          <span style={{ fontSize: '18px', fontWeight: 'bold', color: themeColors.textLight }}>
+            Voice<span style={{ color: themeColors.gold }}>Control</span> AI
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {messages.length > 0 && (
+            <button 
+              onClick={resetConversation}
+              style={{ backgroundColor: 'transparent', border: `1px solid ${themeColors.border}`, color: themeColors.textLight, padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', transition: '0.2s' }}
+            >
+              New Chat
+            </button>
+          )}
+          <button 
+            onClick={() => router.push('/dashboard')}
+            style={{ backgroundColor: 'transparent', border: `1px solid ${themeColors.border}`, color: themeColors.textLight, padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', transition: '0.2s' }}
+          >
+            Dashboard
+          </button>
         </div>
       </nav>
 
-      <main className={styles.main}>
-        <div className={styles.header}>
-          <p className={styles.eyebrow}>AI Voice Coach</p>
-          <h1 className={styles.heading}>Ask Your Voice Coach</h1>
-          <p className={styles.sub}>Get personalized advice based on your actual voice data.</p>
-          {plan === 'free' && remaining !== null && (
-            <div className={styles.limitBadge}>
-              {remaining > 0
-                ? `${remaining} question${remaining !== 1 ? 's' : ''} remaining today`
-                : '0 questions remaining — upgrade for unlimited'}
+      {/* MAIN CONTENT AREA */}
+      <main style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '40px 24px' }}>
+        <div style={{ width: '100%', maxWidth: '900px', display: 'flex', flexDirection: 'column' }}>
+          
+          {/* HEADER TEXT */}
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <h1 style={{ color: themeColors.textLight, fontSize: '28px', fontWeight: '600', margin: '0 0 12px 0', fontFamily: 'Georgia, serif' }}>
+              Your personal voice coach is ready.
+            </h1>
+            <p style={{ color: themeColors.textMuted, fontSize: '16px', margin: 0 }}>
+              Ask anything about your voice assessment, scores,<br/>or how to improve.
+            </p>
+            {plan === 'free' && remaining !== null && (
+              <div style={{ marginTop: '16px', display: 'inline-block', backgroundColor: 'rgba(212, 175, 55, 0.1)', color: themeColors.gold, padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: '500' }}>
+                {remaining > 0
+                  ? `${remaining} question${remaining !== 1 ? 's' : ''} remaining today`
+                  : '0 questions remaining — upgrade for unlimited'}
+              </div>
+            )}
+          </div>
+
+          {/* LIMIT REACHED BANNER */}
+          {limitReached && (
+            <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.2)', borderRadius: '12px', padding: '24px', textAlign: 'center', marginBottom: '32px' }}>
+              <p style={{ color: '#fca5a5', fontSize: '18px', fontWeight: '600', margin: '0 0 8px 0' }}>🔒 Daily Limit Reached</p>
+              <p style={{ color: '#f87171', fontSize: '14px', margin: '0 0 16px 0' }}>Free plan allows 3 coach questions per day. Upgrade to Pro for unlimited access.</p>
+              <button onClick={() => router.push('/pricing')} style={{ backgroundColor: '#dc2626', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>Upgrade to Pro</button>
             </div>
           )}
-        </div>
 
-        {/* LIMIT REACHED */}
-        {limitReached && (
-          <div className={styles.limitBanner}>
-            <p className={styles.limitTitle}>🔒 Daily Limit Reached</p>
-            <p className={styles.limitSub}>Free plan allows 3 coach questions per day. Upgrade to Pro for unlimited access.</p>
-            <button className={styles.limitBtn} onClick={() => router.push('/pricing')}>Upgrade to Pro</button>
-          </div>
-        )}
+          {/* CHAT & INPUT CONTAINER */}
+          <div style={{ backgroundColor: themeColors.cardBg, border: `1px solid ${themeColors.border}`, borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            
+            {/* MESSAGES AREA */}
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', minHeight: '350px' }}>
+              
+              {/* EMPTY STATE (Big Record Button) */}
+              {messages.length === 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '20px 0' }}>
+                  
+                  <button
+                    type="button"
+                    onClick={toggleRecording}
+                    disabled={voiceBusy || limitReached}
+                    style={{
+                      backgroundColor: themeColors.gold,
+                      color: '#000',
+                      border: 'none',
+                      borderRadius: '12px',
+                      padding: '16px 32px',
+                      fontSize: '18px',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      cursor: voiceBusy || limitReached ? 'not-allowed' : 'pointer',
+                      opacity: voiceBusy || limitReached ? 0.6 : 1,
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 4px 12px rgba(212, 175, 55, 0.2)'
+                    }}
+                  >
+                    {isRecording ? (
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="6" y="6" width="12" height="12" rx="2" />
+                      </svg>
+                    ) : (
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="9" y="2" width="6" height="12" rx="3" />
+                        <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8" />
+                      </svg>
+                    )}
+                    {isRecording ? `Recording... ${formatRecordingTime(recordingSeconds)}` : 'Start recording'}
+                  </button>
 
-        {/* CHAT */}
-        <div className={styles.chatWrap}>
-          {/* MESSAGES */}
-          <div className={styles.messages}>
-            {messages.length === 0 && (
-              <div className={styles.emptyChat}>
+                  {isTranscribing && (
+                    <p style={{ color: themeColors.textMuted, fontSize: '14px', margin: '16px 0 0' }}>
+                      Processing your voice…
+                    </p>
+                  )}
+                  {voiceError && (
+                    <p role="alert" style={{ color: '#e5484d', fontSize: '14px', margin: '16px 0 0' }}>
+                      {voiceError}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* ACTIVE CHAT MESSAGES */}
+              {messages.map((msg, i) => (
+                <div key={i} style={{ display: 'flex', gap: '16px', flexDirection: msg.role === 'user' ? 'row-reverse' : 'row' }}>
+                  {msg.role === 'assistant' && (
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>🎓</div>
+                  )}
+                  <div style={{ 
+                    backgroundColor: msg.role === 'user' ? themeColors.gold : '#1e293b', 
+                    color: msg.role === 'user' ? '#000' : themeColors.textLight,
+                    padding: '12px 18px', 
+                    borderRadius: '12px',
+                    maxWidth: '80%',
+                    fontSize: '15px',
+                    lineHeight: '1.5'
+                  }}>
+                    <p style={{ margin: 0 }}>{msg.content}</p>
+                  </div>
+                </div>
+              ))}
+
+              {/* LOADING DOTS */}
+              {(loading || isTranscribing) && messages.length > 0 && (
+                <div style={{ display: 'flex', gap: '16px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>🎓</div>
+                  <div style={{ backgroundColor: '#1e293b', padding: '16px', borderRadius: '12px', display: 'flex', gap: '4px', alignItems: 'center' }}>
+                    <span style={{ width: '6px', height: '6px', backgroundColor: themeColors.textMuted, borderRadius: '50%', animation: 'pulse 1.5s infinite' }}></span>
+                    <span style={{ width: '6px', height: '6px', backgroundColor: themeColors.textMuted, borderRadius: '50%', animation: 'pulse 1.5s infinite 0.2s' }}></span>
+                    <span style={{ width: '6px', height: '6px', backgroundColor: themeColors.textMuted, borderRadius: '50%', animation: 'pulse 1.5s infinite 0.4s' }}></span>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* SUGGESTED QUESTIONS (QUICK PROMPTS) */}
+            {messages.length === 0 && quickPrompts.length > 0 && (
+              <div style={{ borderTop: `1px solid ${themeColors.border}`, padding: '24px' }}>
+                <p style={{ color: themeColors.textMuted, fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 16px 0' }}>Suggested Questions</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                  {quickPrompts.map((prompt, i) => (
+                    <button 
+                      key={i} 
+                      onClick={() => sendMessage(prompt)}
+                      style={{
+                        backgroundColor: 'transparent',
+                        border: `1px solid ${themeColors.border}`,
+                        color: themeColors.textLight,
+                        padding: '8px 16px',
+                        borderRadius: '20px',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseOver={(e) => { e.currentTarget.style.borderColor = themeColors.textMuted; }}
+                      onMouseOut={(e) => { e.currentTarget.style.borderColor = themeColors.border; }}
+                    >
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* INPUT ROW (Bottom bar) */}
+            <div style={{ borderTop: `1px solid ${themeColors.border}`, padding: '16px 24px' }}>
+              {voiceError && messages.length > 0 && (
+                <p role="alert" style={{ color: '#e5484d', fontSize: '13px', margin: '0 0 10px', textAlign: 'center' }}>
+                  {voiceError}
+                </p>
+              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                
+                {/* Mic Button */}
                 <button
                   type="button"
-                  className={styles.emptyChatIcon}
                   onClick={toggleRecording}
                   disabled={voiceBusy || limitReached}
-                  aria-label={isRecording ? 'Stop voice recording' : 'Start voice recording'}
-                  title={isRecording ? 'Stop recording' : 'Record a voice question'}
                   style={{
-                    border: 'none',
-                    cursor: voiceBusy || limitReached ? 'not-allowed' : 'pointer',
-                    opacity: voiceBusy || limitReached ? 0.55 : 1,
-                    background: isRecording ? 'rgba(220, 38, 38, 0.12)' : 'transparent',
-                    color: isRecording ? '#dc2626' : 'inherit',
+                    backgroundColor: isRecording ? 'rgba(220, 38, 38, 0.15)' : 'transparent',
+                    color: isRecording ? '#ef4444' : themeColors.textMuted,
+                    border: `1px solid ${themeColors.border}`,
                     borderRadius: '50%',
-                    display: 'inline-flex',
+                    width: '44px',
+                    height: '44px',
+                    display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    transition: 'all 0.2s ease',
+                    cursor: voiceBusy || limitReached ? 'not-allowed' : 'pointer',
+                    opacity: voiceBusy || limitReached ? 0.5 : 1,
+                    flexShrink: 0
                   }}
                 >
                   {isRecording ? (
-                    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                       <rect x="6" y="6" width="12" height="12" rx="2" />
                     </svg>
                   ) : (
-                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="9" y="2" width="6" height="12" rx="3" />
                       <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8" />
                     </svg>
                   )}
                 </button>
-                {isRecording && (
-                  <p
-                    aria-live="off"
-                    style={{
-                      color: '#dc2626',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      fontVariantNumeric: 'tabular-nums',
-                      margin: '8px 0 0',
-                    }}
-                  >
-                    Recording · {formatRecordingTime(recordingSeconds)}
-                  </p>
-                )}
-                {isTranscribing && (
-                  <p style={{ color: 'inherit', opacity: 0.75, fontSize: '13px', margin: '8px 0 0' }}>
-                    Processing your voice…
-                  </p>
-                )}
-                {voiceError && (
-                  <p role="alert" style={{ color: '#e5484d', fontSize: '13px', margin: '8px 0 0' }}>
-                    {voiceError}
-                  </p>
-                )}
-                <p className={styles.emptyChatTitle}>Your personal voice coach is ready.</p>
-                <p className={styles.emptyChatSub}>Ask anything about your voice assessment, scores, or how to improve.</p>
-              </div>
-            )}
-            {messages.map((msg, i) => (
-              <div key={i} className={`${styles.message} ${msg.role === 'user' ? styles.messageUser : styles.messageAssistant}`}>
-                {msg.role === 'assistant' && (
-                  <div className={styles.messageAvatar}>🎓</div>
-                )}
-                <div className={styles.messageBubble}>
-                  <p className={styles.messageText}>{msg.content}</p>
-                </div>
-              </div>
-            ))}
-            {(loading || isTranscribing) && (
-              <div className={`${styles.message} ${styles.messageAssistant}`}>
-                <div className={styles.messageAvatar}>🎓</div>
-                <div className={styles.messageBubble}>
-                  <div className={styles.typingDots}>
-                    <span></span><span></span><span></span>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
 
-          {/* QUICK PROMPTS */}
-          {messages.length === 0 && quickPrompts.length > 0 && (
-            <div className={styles.quickPrompts}>
-              <p className={styles.quickPromptsLabel}>Suggested Questions</p>
-              <div className={styles.quickPromptsGrid}>
-                {quickPrompts.map((prompt, i) => (
-                  <button key={i} className={styles.quickPromptBtn} onClick={() => sendMessage(prompt)}>
-                    {prompt}
-                  </button>
-                ))}
+                {/* Text Input */}
+                <input
+                  type="text"
+                  placeholder="Ask your coach anything about your voice..."
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                  disabled={voiceBusy || limitReached}
+                  style={{
+                    flex: 1,
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: themeColors.textLight,
+                    fontSize: '15px',
+                    outline: 'none',
+                    padding: '10px 0'
+                  }}
+                />
+
+                {/* Send Button */}
+                <button
+                  onClick={() => sendMessage()}
+                  disabled={voiceBusy || !input.trim() || limitReached}
+                  style={{
+                    backgroundColor: themeColors.gold,
+                    color: '#000',
+                    border: 'none',
+                    borderRadius: '8px',
+                    width: '44px',
+                    height: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: voiceBusy || !input.trim() || limitReached ? 'not-allowed' : 'pointer',
+                    opacity: voiceBusy || !input.trim() || limitReached ? 0.5 : 1,
+                    flexShrink: 0
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+                </button>
               </div>
             </div>
-          )}
-
-          {/* INPUT */}
-          <div>
-            {voiceError && messages.length > 0 && (
-              <p role="alert" style={{ color: '#e5484d', fontSize: '13px', margin: '0 0 10px', textAlign: 'center' }}>
-                {voiceError}
-              </p>
-            )}
-            <div className={styles.inputRow}>
-              <button
-                type="button"
-                onClick={toggleRecording}
-                disabled={voiceBusy || limitReached}
-                aria-label={isRecording ? 'Stop voice recording' : 'Start voice recording'}
-                title={isRecording ? 'Stop recording' : 'Record a voice question'}
-                style={{
-                  border: 'none',
-                  cursor: voiceBusy || limitReached ? 'not-allowed' : 'pointer',
-                  opacity: voiceBusy || limitReached ? 0.55 : 1,
-                  background: isRecording ? 'rgba(220, 38, 38, 0.12)' : 'transparent',
-                  color: isRecording ? '#dc2626' : 'inherit',
-                  borderRadius: '50%',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.2s ease',
-                  padding: '10px',
-                  flexShrink: 0,
-                }}
-              >
-                {isRecording ? (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <rect x="6" y="6" width="12" height="12" rx="2" />
-                  </svg>
-                ) : (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <rect x="9" y="2" width="6" height="12" rx="3" />
-                    <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8" />
-                  </svg>
-                )}
-              </button>
-              <input
-                className={styles.chatInput}
-                type="text"
-                placeholder="Ask your coach anything about your voice..."
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                disabled={voiceBusy || limitReached}
-              />
-              <button
-                className={styles.sendBtn}
-                onClick={() => sendMessage()}
-                disabled={voiceBusy || !input.trim() || limitReached}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="22" y1="2" x2="11" y2="13"/>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                </svg>
-              </button>
-            </div>
+            
           </div>
         </div>
       </main>
