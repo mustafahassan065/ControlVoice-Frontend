@@ -276,23 +276,6 @@ export default function Coach() {
       <main style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '40px 24px' }}>
         <div style={{ width: '100%', maxWidth: '900px', display: 'flex', flexDirection: 'column' }}>
           
-          {/* HEADER TEXT */}
-          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-            <h1 style={{ color: themeColors.textLight, fontSize: '28px', fontWeight: '600', margin: '0 0 12px 0', fontFamily: 'Georgia, serif' }}>
-              Your personal voice coach is ready.
-            </h1>
-            <p style={{ color: themeColors.textMuted, fontSize: '16px', margin: 0 }}>
-              Ask anything about your voice assessment, scores,<br/>or how to improve.
-            </p>
-            {plan === 'free' && remaining !== null && (
-              <div style={{ marginTop: '16px', display: 'inline-block', backgroundColor: 'rgba(212, 175, 55, 0.1)', color: themeColors.gold, padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: '500' }}>
-                {remaining > 0
-                  ? `${remaining} question${remaining !== 1 ? 's' : ''} remaining today`
-                  : '0 questions remaining — upgrade for unlimited'}
-              </div>
-            )}
-          </div>
-
           {/* LIMIT REACHED BANNER */}
           {limitReached && (
             <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.2)', borderRadius: '12px', padding: '24px', textAlign: 'center', marginBottom: '32px' }}>
@@ -306,12 +289,19 @@ export default function Coach() {
           <div style={{ backgroundColor: themeColors.cardBg, border: `1px solid ${themeColors.border}`, borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             
             {/* MESSAGES AREA */}
-            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', minHeight: '350px' }}>
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', minHeight: '400px', justifyContent: messages.length === 0 ? 'center' : 'flex-start' }}>
               
-              {/* EMPTY STATE (Big Record Button) */}
+              {/* EMPTY STATE (Big Record Button) - NOW INSIDE THE BOX */}
               {messages.length === 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '20px 0' }}>
                   
+                  <h1 style={{ color: themeColors.textLight, fontSize: '28px', fontWeight: '600', margin: '0 0 12px 0', fontFamily: 'Georgia, serif', textAlign: 'center' }}>
+                    Your personal voice coach is ready.
+                  </h1>
+                  <p style={{ color: themeColors.textMuted, fontSize: '16px', margin: '0 0 32px 0', textAlign: 'center', lineHeight: '1.5' }}>
+                    Ask anything about your voice assessment, scores,<br/>or how to improve.
+                  </p>
+
                   <button
                     type="button"
                     onClick={toggleRecording}
@@ -393,7 +383,7 @@ export default function Coach() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* SUGGESTED QUESTIONS (QUICK PROMPTS) */}
+            {/* SUGGESTED QUESTIONS (QUICK PROMPTS) - BOTTOM OF THE BOX */}
             {messages.length === 0 && quickPrompts.length > 0 && (
               <div style={{ borderTop: `1px solid ${themeColors.border}`, padding: '24px' }}>
                 <p style={{ color: themeColors.textMuted, fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 16px 0' }}>Suggested Questions</p>
